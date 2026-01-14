@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Horse } from "./types";
+import { Horse } from "../types";
 
 interface RaceBoardProps {
   horses?: Horse[];
@@ -94,7 +94,7 @@ const RaceBoard: React.FC<RaceBoardProps> = ({ horses }) => {
       return START_POSITION;
     }
 
-    if (progress >= pegPositionsForLane.length) {
+    if (progress > pegPositionsForLane.length) {
       return FINISH_POSITION;
     }
 
@@ -201,8 +201,8 @@ const RaceBoard: React.FC<RaceBoardProps> = ({ horses }) => {
                 backgroundBlendMode: "multiply",
               }}
             >
-              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,247,225,0.24),rgba(0,0,0,0.5))]" />
-              <div className="absolute inset-0 flex flex-col">
+              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,247,225,0.24),rgba(0,0,0,0.5))] z-0" />
+              <div className="absolute inset-0 flex flex-col z-10">
                 {laneNumbers.map((lane, idx) => (
                   <div
                     key={`lane-stripe-${lane}`}
@@ -226,7 +226,7 @@ const RaceBoard: React.FC<RaceBoardProps> = ({ horses }) => {
                 ))}
               </div>
 
-              <div className="absolute inset-0 px-[6%] py-8 flex flex-col justify-between">
+              <div className="absolute inset-0 px-[6%] py-8 flex flex-col justify-between z-20">
                 {laneNumbers.map((lane, idx) => {
                   const laneHorse = horsesByLane[idx];
                   const pegCount = pegDistribution[lane];
@@ -235,7 +235,7 @@ const RaceBoard: React.FC<RaceBoardProps> = ({ horses }) => {
                   const horseLeft = getHorseLeft(laneHorse, pegPositions);
                   const isWinner =
                     !laneHorse.scratched &&
-                    (laneHorse.position ?? 0) >= pegCount;
+                    (laneHorse.position ?? 0) > pegCount;
 
                   return (
                     <div
@@ -328,8 +328,8 @@ const RaceBoard: React.FC<RaceBoardProps> = ({ horses }) => {
                 })}
               </div>
 
-              <div className="absolute inset-y-8 left-[9%] w-[8px] bg-white/80 shadow-[0_0_14px_rgba(255,255,255,0.35)]" />
-              <div className="absolute inset-y-8 left-[9%] w-[8px] bg-gradient-to-b from-white/80 via-white/40 to-white/65" />
+              <div className="absolute inset-y-8 left-[9%] w-[8px] bg-white/80 shadow-[0_0_14px_rgba(255,255,255,0.35)] z-30" />
+              <div className="absolute inset-y-8 left-[9%] w-[8px] bg-gradient-to-b from-white/80 via-white/40 to-white/65 z-30" />
             </div>
 
             {/* Finish Line */}
