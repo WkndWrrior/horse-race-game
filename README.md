@@ -1,46 +1,104 @@
-# Getting Started with Create React App
+# Horse Racing Board Game (Online)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An online adaptation of a classic horse racing board game. Roll, scratch, trade, and race your way to the finish line in a fast-paced tabletop-inspired experience.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Multi-race game modes (half day and full day)
+- Scratch phase penalties and trading window
+- Race phase with peg-by-peg movement
+- Final standings and payout summary
+- Polished UI, 3D race board, and sound effects
 
-### `npm start`
+## How to Play (Short)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+1. Start a half day (4 races) or full day (8 races).
+2. Scratch phase: roll to scratch four horses and apply penalties.
+3. Trading phase: buy and sell cards during the timed market.
+4. Race phase: roll to advance horses; scratched horses cost a penalty.
+5. When a horse wins, the pot pays out to matching cards.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Game Rules
 
-### `npm test`
+Full rules are available in `public/Horse Race board game rules (for online game).pdf`.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Sound Effects
 
-### `npm run build`
+- Dice roll SFX (plays only on the human player turn)
+- Victory confetti pop + shimmer when a race winner is shown
+- Daily leaderboard win sting for first place overall
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Screenshots / GIFs
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Add screenshots or clips in a folder such as `docs/screenshots/`.
+Example placeholder: `docs/screenshots/home.png`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Local Development
 
-### `npm run eject`
+### Requirements
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- Node.js 20+ recommended
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Install
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+npm install
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Run
 
-## Learn More
+```bash
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Build
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+npm run build
+```
+
+## Environment Variables
+
+This app uses Create React App style variables:
+
+- `REACT_APP_SITE_URL` - production site URL used to generate `public/robots.txt` and `public/sitemap.xml`
+
+See `.env.example` for a template.
+
+## Deployment Notes
+
+- `npm run build` triggers `prebuild`, which regenerates `public/sitemap.xml` and `public/robots.txt`.
+- Set `REACT_APP_SITE_URL` in your deployment environment for correct sitemap URLs.
+
+## Folder Structure
+
+```
+public/
+  index.html
+  robots.txt
+  sitemap.xml
+  ...
+src/
+  App.tsx
+  App.css
+  components/
+  ...
+```
+
+## Contribution Guidelines
+
+1. Fork the repo and create a feature branch.
+2. Keep changes focused and well-described.
+3. Run `npm test` if you add tests.
+4. Open a PR with a short summary and screenshots if UI changes.
+
+## Tech Stack
+
+- React 18 (Create React App)
+- TypeScript
+- Tailwind CSS
+- Three.js via `@react-three/fiber`
+
+## License
+
+MIT License. See `LICENSE`.

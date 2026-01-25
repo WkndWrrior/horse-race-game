@@ -327,6 +327,7 @@ const App: React.FC = () => {
   const appRootRef = useRef<HTMLDivElement | null>(null);
   const hudRef = useRef<HTMLDivElement | null>(null);
   const lastRollByUserRef = useRef(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const tradeStateRef = useRef<{
     players: Player[];
     listings: TradeListing[];
@@ -344,6 +345,340 @@ const App: React.FC = () => {
   const [pot, setPot] = useState(0);
   const [scratchHistory, setScratchHistory] = useState<number[]>([]);
   const [winner, setWinner] = useState<number | null>(null);
+
+  const getAudioContext = () => {
+    if (typeof window === "undefined") return null;
+    const Ctx =
+      (window as typeof window & { AudioContext?: typeof AudioContext })
+        .AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return null;
+    if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+    return audioCtxRef.current;
+  };
+
+  const playPegPop = () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const now = ctx.currentTime;
+    const dur = 0.08;
+    const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = 1 - i / data.length;
+      data[i] = (Math.random() * 2 - 1) * t;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.setValueAtTime(1200, now);
+    const highpass = ctx.createBiquadFilter();
+    highpass.type = "highpass";
+    highpass.frequency.setValueAtTime(120, now);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    src.connect(lowpass);
+    lowpass.connect(highpass);
+    highpass.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(now);
+    src.stop(now + dur);
+  };
+
+  const playDiceRoll = () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const now = ctx.currentTime;
+    const rand = (min: number, max: number) => min + Math.random() * (max - min);
+    const randInt = (min: number, max: number) =>
+      Math.floor(rand(min, max + 1));
+    const pitchVariation = rand(0.94, 1.06);
+    const gainVariation = rand(0.9, 1.1);
+
+    const impactDur = 0.12;
+    const impactBuffer = ctx.createBuffer(
+      1,
+      Math.floor(ctx.sampleRate * impactDur),
+      ctx.sampleRate
+    );
+    const impactData = impactBuffer.getChannelData(0);
+    for (let i = 0; i < impactData.length; i++) {
+      const t = i / impactData.length;
+      impactData[i] = (Math.random() * 2 - 1) * (1 - t);
+    }
+
+    const impactCount = randInt(2, 4);
+    const impactOffsets: number[] = [];
+    let offset = 0;
+    for (let i = 0; i < impactCount; i += 1) {
+      if (i > 0) {
+        offset += rand(0.08, 0.2);
+      }
+      impactOffsets.push(offset);
+    }
+
+    impactOffsets.forEach((impactOffset, idx) => {
+      const isFinal = idx === impactOffsets.length - 1;
+      const start = now + impactOffset;
+      const baseGain = isFinal ? 0.24 : 0.19 - idx * 0.012;
+      const baseFreq = isFinal ? 900 : 1500 - idx * 140;
+      const baseLowpass = isFinal ? 1800 : 2600 - idx * 150;
+      const impactGain = Math.max(0.12, baseGain * gainVariation * rand(0.95, 1.05));
+      const impactFreq = baseFreq * rand(0.94, 1.05);
+      const impactLowpass = baseLowpass * rand(0.92, 1.04);
+      const src = ctx.createBufferSource();
+      src.buffer = impactBuffer;
+      src.playbackRate.setValueAtTime(
+        pitchVariation * rand(0.98, 1.03),
+        start
+      );
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = "bandpass";
+      bandpass.frequency.setValueAtTime(impactFreq, start);
+      bandpass.Q.setValueAtTime(0.8, start);
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass";
+      lowpass.frequency.setValueAtTime(impactLowpass, start);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(impactGain, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + impactDur);
+      src.connect(bandpass);
+      bandpass.connect(lowpass);
+      lowpass.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(start);
+      src.stop(start + impactDur);
+    });
+
+    const rattleDur = rand(0.7, 1.05);
+    const rattleBuffer = ctx.createBuffer(
+      1,
+      Math.floor(ctx.sampleRate * rattleDur),
+      ctx.sampleRate
+    );
+    const rattleData = rattleBuffer.getChannelData(0);
+    for (let i = 0; i < rattleData.length; i++) {
+      const t = i / rattleData.length;
+      rattleData[i] = (Math.random() * 2 - 1) * (1 - t);
+    }
+    const rattleSrc = ctx.createBufferSource();
+    rattleSrc.buffer = rattleBuffer;
+    rattleSrc.playbackRate.setValueAtTime(
+      pitchVariation * rand(0.98, 1.03),
+      now
+    );
+    const rattleBand = ctx.createBiquadFilter();
+    rattleBand.type = "bandpass";
+    rattleBand.frequency.setValueAtTime(1100 * rand(0.96, 1.04), now);
+    rattleBand.Q.setValueAtTime(0.6, now);
+    const rattleGain = ctx.createGain();
+    rattleGain.gain.setValueAtTime(0.0001, now);
+    rattleGain.gain.exponentialRampToValueAtTime(
+      0.055 * gainVariation,
+      now + 0.03
+    );
+    rattleGain.gain.exponentialRampToValueAtTime(0.0001, now + rattleDur);
+    rattleSrc.connect(rattleBand);
+    rattleBand.connect(rattleGain);
+    rattleGain.connect(ctx.destination);
+    rattleSrc.start(now + 0.02);
+    rattleSrc.stop(now + rattleDur);
+  };
+
+  const playVictoryConfetti = () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const now = ctx.currentTime;
+
+    const popDur = 0.16;
+    const popBuffer = ctx.createBuffer(
+      1,
+      Math.floor(ctx.sampleRate * popDur),
+      ctx.sampleRate
+    );
+    const popData = popBuffer.getChannelData(0);
+    for (let i = 0; i < popData.length; i++) {
+      const t = 1 - i / popData.length;
+      popData[i] = (Math.random() * 2 - 1) * t;
+    }
+    const popSrc = ctx.createBufferSource();
+    popSrc.buffer = popBuffer;
+    const popBand = ctx.createBiquadFilter();
+    popBand.type = "bandpass";
+    popBand.frequency.setValueAtTime(1800, now);
+    popBand.Q.setValueAtTime(0.9, now);
+    const popHigh = ctx.createBiquadFilter();
+    popHigh.type = "highpass";
+    popHigh.frequency.setValueAtTime(600, now);
+    const popGain = ctx.createGain();
+    popGain.gain.setValueAtTime(0.0001, now);
+    popGain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+    popGain.gain.exponentialRampToValueAtTime(0.0001, now + popDur);
+    popSrc.connect(popBand);
+    popBand.connect(popHigh);
+    popHigh.connect(popGain);
+    popGain.connect(ctx.destination);
+    popSrc.start(now);
+    popSrc.stop(now + popDur);
+
+    const hornDur = 1.28;
+    const hornOsc = ctx.createOscillator();
+    hornOsc.type = "square";
+    hornOsc.frequency.setValueAtTime(620, now + 0.01);
+    hornOsc.frequency.exponentialRampToValueAtTime(460, now + hornDur);
+    const hornFilter = ctx.createBiquadFilter();
+    hornFilter.type = "bandpass";
+    hornFilter.frequency.setValueAtTime(880, now);
+    hornFilter.Q.setValueAtTime(0.9, now);
+    const hornGain = ctx.createGain();
+    hornGain.gain.setValueAtTime(0.0001, now);
+    hornGain.gain.exponentialRampToValueAtTime(0.06, now + 0.05);
+    hornGain.gain.exponentialRampToValueAtTime(0.0001, now + hornDur);
+    const hornVibrato = ctx.createOscillator();
+    hornVibrato.type = "sine";
+    hornVibrato.frequency.setValueAtTime(7.5, now);
+    const hornVibratoGain = ctx.createGain();
+    hornVibratoGain.gain.setValueAtTime(10, now);
+    hornVibrato.connect(hornVibratoGain);
+    hornVibratoGain.connect(hornOsc.frequency);
+    hornOsc.connect(hornFilter);
+    hornFilter.connect(hornGain);
+    hornGain.connect(ctx.destination);
+    hornOsc.start(now + 0.02);
+    hornOsc.stop(now + hornDur);
+    hornVibrato.start(now + 0.02);
+    hornVibrato.stop(now + hornDur);
+
+    const shimmerDur = 2.1;
+    const shimmerBuffer = ctx.createBuffer(
+      1,
+      Math.floor(ctx.sampleRate * shimmerDur),
+      ctx.sampleRate
+    );
+    const shimmerData = shimmerBuffer.getChannelData(0);
+    for (let i = 0; i < shimmerData.length; i++) {
+      const t = 1 - i / shimmerData.length;
+      shimmerData[i] = (Math.random() * 2 - 1) * t;
+    }
+    const shimmerSrc = ctx.createBufferSource();
+    shimmerSrc.buffer = shimmerBuffer;
+    const shimmerHigh = ctx.createBiquadFilter();
+    shimmerHigh.type = "highpass";
+    shimmerHigh.frequency.setValueAtTime(900, now);
+    const shimmerLow = ctx.createBiquadFilter();
+    shimmerLow.type = "lowpass";
+    shimmerLow.frequency.setValueAtTime(4200, now);
+    const shimmerBand = ctx.createBiquadFilter();
+    shimmerBand.type = "bandpass";
+    shimmerBand.frequency.setValueAtTime(2400, now);
+    shimmerBand.Q.setValueAtTime(0.45, now);
+    const shimmerGain = ctx.createGain();
+    shimmerGain.gain.setValueAtTime(0.0001, now);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.05, now + 0.2);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + shimmerDur);
+    const shimmerLfo = ctx.createOscillator();
+    shimmerLfo.type = "sine";
+    shimmerLfo.frequency.setValueAtTime(6, now);
+    const shimmerLfoGain = ctx.createGain();
+    shimmerLfoGain.gain.setValueAtTime(0.008, now);
+    shimmerLfo.connect(shimmerLfoGain);
+    shimmerLfoGain.connect(shimmerGain.gain);
+
+    shimmerSrc.connect(shimmerHigh);
+    shimmerHigh.connect(shimmerBand);
+    shimmerBand.connect(shimmerLow);
+    shimmerLow.connect(shimmerGain);
+    shimmerGain.connect(ctx.destination);
+    shimmerSrc.start(now + 0.05);
+    shimmerSrc.stop(now + shimmerDur);
+    shimmerLfo.start(now);
+    shimmerLfo.stop(now + shimmerDur);
+  };
+
+  const playDailyWinSting = () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const now = ctx.currentTime;
+    const notes = [587.33, 698.46, 880];
+    const noteSpacing = 0.14;
+    const noteDur = 0.2;
+
+    notes.forEach((freq, idx) => {
+      const start = now + idx * noteSpacing;
+      const osc = ctx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, start);
+      const harmonic = ctx.createOscillator();
+      harmonic.type = "sine";
+      harmonic.frequency.setValueAtTime(freq * 2, start);
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass";
+      lowpass.frequency.setValueAtTime(3600, start);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.075, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + noteDur);
+      osc.connect(lowpass);
+      harmonic.connect(lowpass);
+      lowpass.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + noteDur);
+      harmonic.start(start);
+      harmonic.stop(start + noteDur);
+    });
+
+    const shimmerDur = 2.1;
+    const shimmerBuffer = ctx.createBuffer(
+      1,
+      Math.floor(ctx.sampleRate * shimmerDur),
+      ctx.sampleRate
+    );
+    const shimmerData = shimmerBuffer.getChannelData(0);
+    for (let i = 0; i < shimmerData.length; i++) {
+      const t = 1 - i / shimmerData.length;
+      shimmerData[i] = (Math.random() * 2 - 1) * t;
+    }
+    const shimmerSrc = ctx.createBufferSource();
+    shimmerSrc.buffer = shimmerBuffer;
+    const shimmerHigh = ctx.createBiquadFilter();
+    shimmerHigh.type = "highpass";
+    shimmerHigh.frequency.setValueAtTime(1400, now);
+    const shimmerLow = ctx.createBiquadFilter();
+    shimmerLow.type = "lowpass";
+    shimmerLow.frequency.setValueAtTime(5200, now);
+    const shimmerBand = ctx.createBiquadFilter();
+    shimmerBand.type = "bandpass";
+    shimmerBand.frequency.setValueAtTime(2600, now);
+    shimmerBand.Q.setValueAtTime(0.5, now);
+    const shimmerGain = ctx.createGain();
+    shimmerGain.gain.setValueAtTime(0.0001, now);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.03, now + 0.2);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + shimmerDur);
+    const shimmerLfo = ctx.createOscillator();
+    shimmerLfo.type = "sine";
+    shimmerLfo.frequency.setValueAtTime(5.5, now);
+    const shimmerLfoGain = ctx.createGain();
+    shimmerLfoGain.gain.setValueAtTime(0.006, now);
+    shimmerLfo.connect(shimmerLfoGain);
+    shimmerLfoGain.connect(shimmerGain.gain);
+    shimmerSrc.connect(shimmerHigh);
+    shimmerHigh.connect(shimmerBand);
+    shimmerBand.connect(shimmerLow);
+    shimmerLow.connect(shimmerGain);
+    shimmerGain.connect(ctx.destination);
+    shimmerSrc.start(now + 0.08);
+    shimmerSrc.stop(now + shimmerDur);
+    shimmerLfo.start(now + 0.08);
+    shimmerLfo.stop(now + shimmerDur);
+  };
 
   const totalRaces = useMemo(() => {
     if (!gameMode) return 0;
@@ -965,6 +1300,7 @@ const App: React.FC = () => {
       )
     );
     setScratchHistory((prev) => [...prev, horseNumber]);
+    playPegPop();
 
     addLog(
       `${currentPlayer.name} scratched horse ${horseLabel}. Everyone paid $${penalty} per card.`
@@ -1103,12 +1439,14 @@ const App: React.FC = () => {
     }
 
     const maxSpaces = pegDistribution[horseNumber] + 1;
-    const updatedHorses = horses.map((h) => {
-      if (h.number !== horseNumber) return h;
-      const newPosition = Math.min(maxSpaces, h.position + 1);
-      return { ...h, position: newPosition };
-    });
+    const nextPosition = Math.min(maxSpaces, horse.position + 1);
+    const updatedHorses = horses.map((h) =>
+      h.number === horseNumber ? { ...h, position: nextPosition } : h
+    );
     setHorses(updatedHorses);
+    if (nextPosition !== horse.position) {
+      playPegPop();
+    }
 
     const movedHorse = updatedHorses.find((h) => h.number === horseNumber);
     if (!movedHorse) return;
@@ -1118,13 +1456,14 @@ const App: React.FC = () => {
       setWinner(horseNumber);
       setShowConfetti(true);
       setConfettiSeed((prev) => prev + 1);
+      playVictoryConfetti();
       if (confettiTimeoutRef.current) {
         window.clearTimeout(confettiTimeoutRef.current);
       }
       confettiTimeoutRef.current = window.setTimeout(() => {
         setShowConfetti(false);
         confettiTimeoutRef.current = null;
-      }, 1200);
+      }, 2100);
       addLog(`Horse ${horseLabel} crosses the finish line!`);
       handlePayout(horseNumber);
     } else {
@@ -1145,6 +1484,9 @@ const App: React.FC = () => {
     )
       return;
     lastRollByUserRef.current = isUserTurn;
+    if (isUserTurn) {
+      playDiceRoll();
+    }
     const die1 = Math.floor(Math.random() * 6) + 1;
     const die2 = Math.floor(Math.random() * 6) + 1;
     const total = die1 + die2;
@@ -2207,6 +2549,12 @@ const App: React.FC = () => {
                       onClick={() => {
                         setRaceSummary(null);
                         setShowFinalSummary(true);
+                        const userEntry = finalStandings.find(
+                          (entry) => entry.playerId === 1
+                        );
+                        if (userEntry?.rank === 1) {
+                          playDailyWinSting();
+                        }
                       }}
                       className="px-4 py-2 rounded-lg font-semibold bg-white/70 text-green-900 hover:bg-white"
                     >
