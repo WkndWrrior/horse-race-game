@@ -43,6 +43,8 @@
   perspective: 900px;
   transform: translateZ(0);
   will-change: transform;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
 .dice-cube {
@@ -50,8 +52,11 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transition: transform 0.85s cubic-bezier(0.2, 0.8, 0.2, 1.2);
   will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .dice-face {
@@ -110,6 +115,9 @@
 
 .dice-panel {
   touch-action: manipulation;
+  transform: translateZ(0);
+  will-change: transform;
+  isolation: isolate;
 }
 
 @media (max-width: 768px) {
