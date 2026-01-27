@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import RaceBoard3D from "./components/RaceBoard3D";
 import { Horse } from "./types";
@@ -1224,14 +1224,17 @@ const App: React.FC = () => {
     setWinner(null);
   };
 
-  const getNextActiveIndex = (startIndex: number) => {
-    if (players.length === 0) return startIndex;
-    for (let offset = 1; offset <= players.length; offset += 1) {
-      const idx = (startIndex + offset) % players.length;
-      if (!players[idx].eliminated) return idx;
-    }
-    return startIndex;
-  };
+  const getNextActiveIndex = useCallback(
+    (startIndex: number) => {
+      if (players.length === 0) return startIndex;
+      for (let offset = 1; offset <= players.length; offset += 1) {
+        const idx = (startIndex + offset) % players.length;
+        if (!players[idx].eliminated) return idx;
+      }
+      return startIndex;
+    },
+    [players]
+  );
 
   const advanceTurn = () => {
     if (players.length === 0) return;
@@ -1743,7 +1746,7 @@ const App: React.FC = () => {
         setCurrentPlayerIndex(nextIndex);
       }
     }
-  }, [players, currentPlayerIndex]);
+  }, [players, currentPlayerIndex, getNextActiveIndex]);
 
   useEffect(() => {
     tradeStateRef.current = {
