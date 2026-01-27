@@ -1895,7 +1895,7 @@ const App: React.FC = () => {
         aiRollTimeoutRef.current = null;
       }
     };
-  }, [phase, players.length, isRolling, isUserTurn]);
+  }, [phase, players.length, isRolling, isUserTurn, isCurrentPlayerActive]);
 
   useEffect(() => {
     if (!raceSummary) return;
