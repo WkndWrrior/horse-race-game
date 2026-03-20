@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import "./App.css";
 import RaceBoard3D from "./components/RaceBoard3D";
 import { Horse } from "./types";
+import { safeReadJson, safeWriteJson } from "./utils/storage";
 
 interface Card {
   value: number;
@@ -268,40 +269,38 @@ const App: React.FC = () => {
     null
   );
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => {
-    if (typeof window === "undefined") {
+    const stored = safeReadJson<unknown>(STATS_STORAGE_KEY, null);
+    if (!stored || typeof stored !== "object") {
       return EMPTY_STATS;
     }
-    const stored = window.localStorage.getItem(STATS_STORAGE_KEY);
-    if (!stored) return EMPTY_STATS;
-    try {
-      const parsed = JSON.parse(stored) as Partial<PlayerStats> & {
-        wins?: number;
-        bestBalance?: number;
+
+    const parsed = stored as Partial<PlayerStats> & {
+      wins?: number;
+      bestBalance?: number;
+    };
+    if (parsed?.half && parsed?.full) {
+      return {
+        half: {
+          wins: coerceStat(parsed.half.wins),
+          bestBalance: coerceStat(parsed.half.bestBalance),
+        },
+        full: {
+          wins: coerceStat(parsed.full.wins),
+          bestBalance: coerceStat(parsed.full.bestBalance),
+        },
       };
-      if (parsed?.half && parsed?.full) {
-        return {
-          half: {
-            wins: coerceStat(parsed.half.wins),
-            bestBalance: coerceStat(parsed.half.bestBalance),
-          },
-          full: {
-            wins: coerceStat(parsed.full.wins),
-            bestBalance: coerceStat(parsed.full.bestBalance),
-          },
-        };
-      }
-      if (Number.isFinite(parsed.wins) || Number.isFinite(parsed.bestBalance)) {
-        const wins = coerceStat(parsed.wins);
-        const bestBalance = coerceStat(parsed.bestBalance);
-        return {
-          half: { wins, bestBalance },
-          full: { wins, bestBalance },
-        };
-      }
-      return EMPTY_STATS;
-    } catch {
-      return EMPTY_STATS;
     }
+
+    if (Number.isFinite(parsed.wins) || Number.isFinite(parsed.bestBalance)) {
+      const wins = coerceStat(parsed.wins);
+      const bestBalance = coerceStat(parsed.bestBalance);
+      return {
+        half: { wins, bestBalance },
+        full: { wins, bestBalance },
+      };
+    }
+
+    return EMPTY_STATS;
   });
   const [dieRotations, setDieRotations] = useState<[DiceRotation, DiceRotation]>([
     { x: 0, y: 0 },
@@ -1759,7 +1758,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(playerStats));
+    safeWriteJson(STATS_STORAGE_KEY, playerStats);
   }, [playerStats]);
 
   useEffect(() => {
