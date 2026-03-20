@@ -3,6 +3,7 @@ import "./App.css";
 import BoardSurface from "./components/BoardSurface";
 import { Horse } from "./types";
 import useViewportMode from "./hooks/useViewportMode";
+import useTotalEliminationGuard from "./hooks/useTotalEliminationGuard";
 import { safeReadJson, safeWriteJson } from "./utils/storage";
 import { acquireScrollLock } from "./utils/scrollLock";
 import {
@@ -698,7 +699,7 @@ const App: React.FC = () => {
       scratchStep: undefined,
     }));
 
-  const buildFinalStandings = (playersSnapshot: Player[]) => {
+  const buildFinalStandings = useCallback((playersSnapshot: Player[]) => {
     const eliminatedById = new Map(
       playersSnapshot.map((player) => [player.id, !!player.eliminated])
     );
@@ -728,12 +729,12 @@ const App: React.FC = () => {
         });
         return acc;
       }, []);
-  };
+  }, []);
 
   const displayPlayerName = (playerId: number, fallback: string) =>
     playerId === 1 ? "You" : fallback;
 
-  const recordFinalStats = (playersSnapshot: Player[]) => {
+  const recordFinalStats = useCallback((playersSnapshot: Player[]) => {
     if (finalStatsRecordedRef.current) return;
     if (!gameMode) return;
     const standings = buildFinalStandings(playersSnapshot);
@@ -749,7 +750,7 @@ const App: React.FC = () => {
         bestBalance: Math.max(prev[gameMode].bestBalance, userPlayer.balance),
       },
     }));
-  };
+  }, [buildFinalStandings, gameMode]);
 
   const applyBailoutIfNeeded = (playersSnapshot: Player[]) => {
     if (!gameMode) return playersSnapshot;
@@ -828,6 +829,53 @@ const App: React.FC = () => {
     setTradeSecondsLeft(0);
     setShowTradeModal(false);
   };
+  const clearPendingGameTimers = useCallback(() => {
+    if (rollTimeoutRef.current) {
+      window.clearTimeout(rollTimeoutRef.current);
+      rollTimeoutRef.current = null;
+    }
+    if (summaryTimeoutRef.current) {
+      window.clearTimeout(summaryTimeoutRef.current);
+      summaryTimeoutRef.current = null;
+    }
+    if (summaryDelayRef.current) {
+      window.clearTimeout(summaryDelayRef.current);
+      summaryDelayRef.current = null;
+    }
+    if (confettiTimeoutRef.current) {
+      window.clearTimeout(confettiTimeoutRef.current);
+      confettiTimeoutRef.current = null;
+    }
+    if (aiRollTimeoutRef.current) {
+      window.clearTimeout(aiRollTimeoutRef.current);
+      aiRollTimeoutRef.current = null;
+    }
+    if (tradeTimeoutRef.current) {
+      window.clearTimeout(tradeTimeoutRef.current);
+      tradeTimeoutRef.current = null;
+    }
+    if (tradeIntervalRef.current) {
+      window.clearInterval(tradeIntervalRef.current);
+      tradeIntervalRef.current = null;
+    }
+    if (tradeAiTimeoutRef.current) {
+      window.clearTimeout(tradeAiTimeoutRef.current);
+      tradeAiTimeoutRef.current = null;
+    }
+    if (tradeDelayRef.current) {
+      window.clearTimeout(tradeDelayRef.current);
+      tradeDelayRef.current = null;
+    }
+    if (tradeAiDelayRef.current) {
+      window.clearTimeout(tradeAiDelayRef.current);
+      tradeAiDelayRef.current = null;
+    }
+    tradeEndsAtRef.current = null;
+    setTradeSecondsLeft(0);
+    setShowTradeModal(false);
+    setIsRolling(false);
+    setShowConfetti(false);
+  }, []);
 
   const openTradeMarket = (playersSnapshot: Player[]) => {
     if (tradeIntervalRef.current) {
@@ -994,35 +1042,7 @@ const App: React.FC = () => {
     finalStatsRecordedRef.current = false;
     lastRollByUserRef.current = false;
     listingCounterRef.current = 0;
-    if (summaryDelayRef.current) {
-      window.clearTimeout(summaryDelayRef.current);
-      summaryDelayRef.current = null;
-    }
-    if (aiRollTimeoutRef.current) {
-      window.clearTimeout(aiRollTimeoutRef.current);
-      aiRollTimeoutRef.current = null;
-    }
-    if (tradeTimeoutRef.current) {
-      window.clearTimeout(tradeTimeoutRef.current);
-      tradeTimeoutRef.current = null;
-    }
-    if (tradeIntervalRef.current) {
-      window.clearInterval(tradeIntervalRef.current);
-      tradeIntervalRef.current = null;
-    }
-    if (tradeAiTimeoutRef.current) {
-      window.clearTimeout(tradeAiTimeoutRef.current);
-      tradeAiTimeoutRef.current = null;
-    }
-    if (tradeDelayRef.current) {
-      window.clearTimeout(tradeDelayRef.current);
-      tradeDelayRef.current = null;
-    }
-    if (tradeAiDelayRef.current) {
-      window.clearTimeout(tradeAiDelayRef.current);
-      tradeAiDelayRef.current = null;
-    }
-    tradeEndsAtRef.current = null;
+    clearPendingGameTimers();
     setPot(0);
     setScratchHistory([]);
     setWinner(null);
@@ -1058,48 +1078,7 @@ const App: React.FC = () => {
     finalStatsRecordedRef.current = false;
     lastRollByUserRef.current = false;
     listingCounterRef.current = 0;
-    setShowConfetti(false);
-    if (rollTimeoutRef.current) {
-      window.clearTimeout(rollTimeoutRef.current);
-      rollTimeoutRef.current = null;
-    }
-    if (summaryTimeoutRef.current) {
-      window.clearTimeout(summaryTimeoutRef.current);
-      summaryTimeoutRef.current = null;
-    }
-    if (summaryDelayRef.current) {
-      window.clearTimeout(summaryDelayRef.current);
-      summaryDelayRef.current = null;
-    }
-    if (confettiTimeoutRef.current) {
-      window.clearTimeout(confettiTimeoutRef.current);
-      confettiTimeoutRef.current = null;
-    }
-    if (aiRollTimeoutRef.current) {
-      window.clearTimeout(aiRollTimeoutRef.current);
-      aiRollTimeoutRef.current = null;
-    }
-    if (tradeTimeoutRef.current) {
-      window.clearTimeout(tradeTimeoutRef.current);
-      tradeTimeoutRef.current = null;
-    }
-    if (tradeIntervalRef.current) {
-      window.clearInterval(tradeIntervalRef.current);
-      tradeIntervalRef.current = null;
-    }
-    if (tradeAiTimeoutRef.current) {
-      window.clearTimeout(tradeAiTimeoutRef.current);
-      tradeAiTimeoutRef.current = null;
-    }
-    if (tradeDelayRef.current) {
-      window.clearTimeout(tradeDelayRef.current);
-      tradeDelayRef.current = null;
-    }
-    if (tradeAiDelayRef.current) {
-      window.clearTimeout(tradeAiDelayRef.current);
-      tradeAiDelayRef.current = null;
-    }
-    tradeEndsAtRef.current = null;
+    clearPendingGameTimers();
     setPot(0);
     setScratchHistory([]);
     setWinner(null);
@@ -1436,45 +1415,8 @@ const App: React.FC = () => {
     setRaceSummary(null);
     setFinalStandings([]);
     setShowFinalSummary(false);
-    setShowConfetti(false);
     lastRollByUserRef.current = false;
-    if (summaryTimeoutRef.current) {
-      window.clearTimeout(summaryTimeoutRef.current);
-      summaryTimeoutRef.current = null;
-    }
-    if (summaryDelayRef.current) {
-      window.clearTimeout(summaryDelayRef.current);
-      summaryDelayRef.current = null;
-    }
-    if (confettiTimeoutRef.current) {
-      window.clearTimeout(confettiTimeoutRef.current);
-      confettiTimeoutRef.current = null;
-    }
-    if (aiRollTimeoutRef.current) {
-      window.clearTimeout(aiRollTimeoutRef.current);
-      aiRollTimeoutRef.current = null;
-    }
-    if (tradeTimeoutRef.current) {
-      window.clearTimeout(tradeTimeoutRef.current);
-      tradeTimeoutRef.current = null;
-    }
-    if (tradeIntervalRef.current) {
-      window.clearInterval(tradeIntervalRef.current);
-      tradeIntervalRef.current = null;
-    }
-    if (tradeAiTimeoutRef.current) {
-      window.clearTimeout(tradeAiTimeoutRef.current);
-      tradeAiTimeoutRef.current = null;
-    }
-    if (tradeDelayRef.current) {
-      window.clearTimeout(tradeDelayRef.current);
-      tradeDelayRef.current = null;
-    }
-    if (tradeAiDelayRef.current) {
-      window.clearTimeout(tradeAiDelayRef.current);
-      tradeAiDelayRef.current = null;
-    }
-    tradeEndsAtRef.current = null;
+    clearPendingGameTimers();
     lastRollByUserRef.current = false;
     setWinner(null);
     setPhase("scratch");
@@ -1595,6 +1537,20 @@ const App: React.FC = () => {
         {formatCard(card)}
       </div>
     ));
+  useTotalEliminationGuard({
+    gameStarted,
+    phase,
+    winner,
+    players,
+    clearPendingGameTimers,
+    buildFinalStandings,
+    recordFinalStats,
+    setRaceSummary,
+    setPhase,
+    setFinalStandings,
+    setShowFinalSummary,
+  });
+
   useEffect(() => {
     if (!players.length) return;
     if (players[currentPlayerIndex]?.eliminated) {
