@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import RaceBoard3D from "./components/RaceBoard3D";
+import BoardSurface from "./components/BoardSurface";
 import { Horse } from "./types";
 import useViewportMode from "./hooks/useViewportMode";
 import { safeReadJson, safeWriteJson } from "./utils/storage";
@@ -2249,7 +2249,7 @@ const App: React.FC = () => {
               </aside>
 
               <div className="order-1 lg:order-2 flex justify-center items-center h-full min-h-0">
-                <RaceBoard3D horses={horses} />
+                <BoardSurface horses={horses} />
               </div>
 
               <aside className="order-3 hidden md:block">

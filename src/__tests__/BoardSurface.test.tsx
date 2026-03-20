@@ -1,0 +1,86 @@
+import React from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import BoardSurface from "../components/BoardSurface";
+
+jest.mock("../utils/webglSupport", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+jest.mock("../components/RaceBoard3D", () => ({
+  __esModule: true,
+  default: () => {
+    if ((globalThis as { __boardSurfaceShouldThrow?: boolean }).__boardSurfaceShouldThrow) {
+      throw new Error("boom");
+    }
+
+    return <div data-testid="race-board-3d" />;
+  },
+}));
+
+const mockIsWebGLSupported = jest.requireMock("../utils/webglSupport")
+  .default as jest.Mock;
+
+describe("BoardSurface", () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+    delete (globalThis as { __boardSurfaceShouldThrow?: boolean })
+      .__boardSurfaceShouldThrow;
+  });
+
+  it("shows the unsupported state when WebGL is unavailable", () => {
+    mockIsWebGLSupported.mockReturnValue(false);
+
+    render(<BoardSurface />);
+
+    expect(
+      screen.getByRole("heading", { name: /3d board unsupported/i })
+    ).toBeInTheDocument();
+  });
+
+  it("renders the 3D board when WebGL is supported", () => {
+    mockIsWebGLSupported.mockReturnValue(true);
+
+    render(<BoardSurface />);
+
+    expect(screen.getByTestId("race-board-3d")).toBeInTheDocument();
+  });
+
+  it("shows the unsupported state when the board runtime throws", () => {
+    mockIsWebGLSupported.mockReturnValue(true);
+    (globalThis as { __boardSurfaceShouldThrow?: boolean }).__boardSurfaceShouldThrow = true;
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      render(<BoardSurface />);
+
+      expect(
+        screen.getByRole("heading", { name: /3d board failed to load/i })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("retries after a transient runtime failure", () => {
+    mockIsWebGLSupported.mockReturnValue(true);
+    (globalThis as { __boardSurfaceShouldThrow?: boolean }).__boardSurfaceShouldThrow = true;
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      render(<BoardSurface />);
+
+      expect(
+        screen.getByRole("heading", { name: /3d board failed to load/i })
+      ).toBeInTheDocument();
+
+      (globalThis as { __boardSurfaceShouldThrow?: boolean }).__boardSurfaceShouldThrow = false;
+      fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+
+      expect(screen.getByTestId("race-board-3d")).toBeInTheDocument();
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+});

@@ -660,3 +660,4 @@ const RaceBoard3D: React.FC<RaceBoard3DProps> = ({ horses }) => {
 };
 
 export default RaceBoard3D;
+export type { RaceBoard3DProps };
