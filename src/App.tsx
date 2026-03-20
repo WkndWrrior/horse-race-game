@@ -4,6 +4,7 @@ import RaceBoard3D from "./components/RaceBoard3D";
 import { Horse } from "./types";
 import useViewportMode from "./hooks/useViewportMode";
 import { safeReadJson, safeWriteJson } from "./utils/storage";
+import { acquireScrollLock } from "./utils/scrollLock";
 
 interface Card {
   value: number;
@@ -323,8 +324,6 @@ const App: React.FC = () => {
   const tradeDelayRef = useRef<number | null>(null);
   const tradeAiDelayRef = useRef<number | null>(null);
   const finalStatsRecordedRef = useRef(false);
-  const bodyOverflowRef = useRef<string | null>(null);
-  const htmlOverflowRef = useRef<string | null>(null);
   const appRootRef = useRef<HTMLDivElement | null>(null);
   const hudRef = useRef<HTMLDivElement | null>(null);
   const lastRollByUserRef = useRef(false);
@@ -1770,25 +1769,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const shouldLock = phase === "trade" || (gameStarted && isMobile);
-    if (shouldLock) {
-      if (bodyOverflowRef.current === null) {
-        bodyOverflowRef.current = document.body.style.overflow || "";
-      }
-      if (htmlOverflowRef.current === null) {
-        htmlOverflowRef.current = document.documentElement.style.overflow || "";
-      }
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      return;
-    }
-    if (bodyOverflowRef.current !== null) {
-      document.body.style.overflow = bodyOverflowRef.current;
-      bodyOverflowRef.current = null;
-    }
-    if (htmlOverflowRef.current !== null) {
-      document.documentElement.style.overflow = htmlOverflowRef.current;
-      htmlOverflowRef.current = null;
-    }
+    if (!shouldLock) return;
+    const releaseScrollLock = acquireScrollLock();
+    return () => {
+      releaseScrollLock();
+    };
   }, [phase, gameStarted, isMobile]);
 
   useEffect(() => {
