@@ -61,13 +61,13 @@ npm run build
 
 This app uses Create React App style variables:
 
-- `REACT_APP_SITE_URL` - production site URL used to generate `public/robots.txt` and `public/sitemap.xml`
+- `REACT_APP_SITE_URL` - production site URL used to generate build-time `robots.txt` and `sitemap.xml`
 
 See `.env.example` for a template.
 
 ## Deployment Notes
 
-- `npm run build` triggers `prebuild`, which regenerates `public/sitemap.xml` and `public/robots.txt`.
+- `npm run build` adds a MediaPipe source-map compatibility file before bundling, then regenerates `build/robots.txt` and `build/sitemap.xml` after bundling.
 - Set `REACT_APP_SITE_URL` in your deployment environment for correct sitemap URLs.
 
 ## Folder Structure

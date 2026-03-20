@@ -22,10 +22,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "prestart": "node generate-seo.js",
     "start": "react-scripts start",
-    "prebuild": "node generate-seo.js",
+    "prebuild": "node scripts/ensure-mediapipe-source-map.js",
     "build": "react-scripts build",
+    "postbuild": "node generate-seo.js build",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "test": "react-scripts test",
