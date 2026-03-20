@@ -120,6 +120,24 @@
   isolation: isolate;
 }
 
+.game-layout {
+  height: 100%;
+}
+
+.game-board-region {
+  min-height: 0;
+}
+
+.player-card-list {
+  scrollbar-width: thin;
+}
+
+.trade-panel-scroll {
+  overflow: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 768px) {
   :root {
     --board-max-height: 100%;
@@ -127,6 +145,48 @@
 
   button {
     min-height: 44px;
+  }
+
+  .game-board-region {
+    min-height: clamp(120px, 24vh, 220px);
+  }
+
+  .player-card-dock {
+    max-height: 8rem;
+  }
+
+  .player-card-list {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.25rem;
+  }
+
+  .player-card-list > * {
+    flex: 0 0 auto;
+  }
+
+  .mobile-trade-panel {
+    max-height: min(26vh, 14rem);
+  }
+
+  .trade-panel-scroll {
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) and (max-height: 720px) {
+  .game-layout {
+    gap: 0.5rem;
+  }
+
+  .player-card-dock {
+    max-height: 7rem;
+  }
+
+  .mobile-trade-panel {
+    max-height: min(24vh, 12rem);
   }
 }
 

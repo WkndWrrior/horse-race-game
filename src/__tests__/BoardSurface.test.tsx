@@ -33,6 +33,7 @@ describe("BoardSurface", () => {
 
     render(<BoardSurface />);
 
+    expect(screen.getByRole("status")).toHaveClass("min-h-0");
     expect(
       screen.getByRole("heading", { name: /3d board unsupported/i })
     ).toBeInTheDocument();
@@ -54,6 +55,7 @@ describe("BoardSurface", () => {
     try {
       render(<BoardSurface />);
 
+      expect(screen.getByRole("alert")).toHaveClass("min-h-0");
       expect(
         screen.getByRole("heading", { name: /3d board failed to load/i })
       ).toBeInTheDocument();

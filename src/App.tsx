@@ -1522,6 +1522,7 @@ const App: React.FC = () => {
   const userSellsLeft = isUserEliminated
     ? 0
     : Math.max(MAX_TRADES_PER_PLAYER - (userSellCount + userActiveListings), 0);
+  const showMobileTradePanel = isMobile && phase === "trade" && showTradeModal;
   const renderCards = (cards: Card[]) =>
     sortCardsByValue(cards).map((card, idx) => (
       <div
@@ -1537,6 +1538,219 @@ const App: React.FC = () => {
         {formatCard(card)}
       </div>
     ));
+  const renderTradePanel = (mobile: boolean) => (
+    <div
+      role={mobile ? "dialog" : undefined}
+      aria-modal={mobile ? "false" : undefined}
+      aria-label={mobile ? "Trading Window" : undefined}
+      className={
+        mobile
+          ? "mobile-trade-panel flex w-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#f4e7cd] text-green-900 shadow-2xl border border-green-900/20 px-4 py-4"
+          : "flex w-full max-w-[920px] flex-col rounded-2xl bg-[#f4e7cd] text-green-900 shadow-2xl border border-green-900/20 px-6 py-6"
+      }
+    >
+      <div
+        className={
+          mobile
+            ? "flex flex-col gap-3"
+            : "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        }
+      >
+        <div>
+          <h3 className="text-xl font-bold uppercase tracking-wide">Trading Window</h3>
+          <p className="hidden md:block text-sm text-green-900/70">
+            List any card for ${LISTING_PRICE}. Buy any listed card for ${LISTING_PRICE}.
+          </p>
+          <p className="text-xs text-green-900/60 mt-1">
+            Auto-starts in {tradeSecondsLeft}s.
+          </p>
+        </div>
+        <div
+          className={`text-sm font-semibold text-green-900/80 ${
+            mobile ? "" : "text-right"
+          }`}
+        >
+          <div>Your balance: ${userPlayer?.balance.toFixed(2) ?? "0.00"}</div>
+          <div className="text-xs font-semibold text-green-900/60">
+            Buys left: {userBuysLeft} · Sells left: {userSellsLeft}
+          </div>
+          {isUserEliminated && (
+            <div className="text-xs font-semibold text-red-400">You are eliminated.</div>
+          )}
+        </div>
+      </div>
+
+      <div
+        className={
+          mobile
+            ? "mt-4 flex items-center justify-center gap-2"
+            : "mt-4 md:mt-6 flex md:hidden items-center justify-center gap-2"
+        }
+      >
+        <button
+          type="button"
+          onClick={() => setTradeTab("buy")}
+          className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${
+            tradeTab === "buy"
+              ? "bg-green-900 text-[#f4e7cd] border-green-900"
+              : "bg-white/70 text-green-900 border-green-900/20"
+          }`}
+          aria-pressed={tradeTab === "buy"}
+        >
+          Buy
+        </button>
+        <button
+          type="button"
+          onClick={() => setTradeTab("sell")}
+          className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${
+            tradeTab === "sell"
+              ? "bg-green-900 text-[#f4e7cd] border-green-900"
+              : "bg-white/70 text-green-900 border-green-900/20"
+          }`}
+          aria-pressed={tradeTab === "sell"}
+        >
+          Sell
+        </button>
+      </div>
+
+      <div className={mobile ? "mt-4 flex min-h-0 flex-1 flex-col" : "mt-6 grid grid-cols-1 md:grid-cols-2 gap-6"}>
+        <div
+          className={
+            mobile
+              ? tradeTab === "buy"
+                ? "flex h-full min-h-0 flex-col"
+                : "hidden"
+              : tradeTab === "buy"
+              ? "block"
+              : "hidden md:block"
+          }
+        >
+          <h4 className="text-sm font-bold uppercase tracking-widest text-green-900/60 mb-2">
+            Market Listings
+          </h4>
+          <div
+            className={`pr-1 ${
+              mobile
+                ? "trade-panel-scroll min-h-0 flex-1 space-y-2"
+                : "max-h-[320px] overflow-auto space-y-2"
+            }`}
+          >
+            {tradeListings.length === 0 ? (
+              <p className="text-sm text-green-900/70">No cards are listed yet.</p>
+            ) : (
+              tradeListings.map((listing) => {
+                const seller =
+                  players.find((player) => player.id === listing.sellerId)?.name ?? "Unknown";
+                const isUserListing = listing.sellerId === 1;
+                const canBuy =
+                  !isUserListing &&
+                  (userPlayer?.balance ?? 0) >= LISTING_PRICE &&
+                  userBuysLeft > 0;
+                return (
+                  <div
+                    key={listing.id}
+                    className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 border border-green-900/10"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">{formatCard(listing.card)}</p>
+                      <p className="text-xs text-green-900/60">
+                        Seller: {isUserListing ? "You" : seller}
+                      </p>
+                    </div>
+                    {isUserListing ? (
+                      <button
+                        onClick={() => handleCancelListing(listing.id)}
+                        aria-label={`Cancel ${formatCard(listing.card)}`}
+                        className="px-3 py-1 rounded-full text-xs font-semibold bg-green-900/10 text-green-900 hover:bg-green-900/20"
+                      >
+                        Cancel
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleBuyListing(listing.id)}
+                        aria-label={`Buy ${formatCard(listing.card)} for $${LISTING_PRICE}`}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          canBuy
+                            ? "bg-green-900 text-[#f4e7cd] hover:bg-green-800"
+                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        }`}
+                        disabled={!canBuy}
+                      >
+                        Buy ${LISTING_PRICE}
+                      </button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div
+          className={
+            mobile
+              ? tradeTab === "sell"
+                ? "flex h-full min-h-0 flex-col"
+                : "hidden"
+              : tradeTab === "sell"
+              ? "block"
+              : "hidden md:block"
+          }
+        >
+          <h4 className="text-sm font-bold uppercase tracking-widest text-green-900/60 mb-2">
+            Your Cards
+          </h4>
+          <div
+            className={`pr-1 ${
+              mobile
+                ? "trade-panel-scroll min-h-0 flex-1 space-y-2"
+                : "max-h-[320px] overflow-auto space-y-2"
+            }`}
+          >
+            {currentPlayerCards.length === 0 ? (
+              <p className="text-sm text-green-900/70">You have no cards to list.</p>
+            ) : (
+              sortCardsByValue(currentPlayerCards).map((card, idx) => (
+                <div
+                  key={`${card.value}-${card.suit}-${idx}`}
+                  className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 border border-green-900/10"
+                >
+                  <span className="text-sm font-semibold">{formatCard(card)}</span>
+                  <button
+                    onClick={() => handleListCardForSale(card)}
+                    aria-label={`List ${formatCard(card)} for $${LISTING_PRICE}`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      userSellsLeft > 0
+                        ? "bg-green-900 text-[#f4e7cd] hover:bg-green-800"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    }`}
+                    disabled={userSellsLeft === 0}
+                  >
+                    List ${LISTING_PRICE}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={
+          mobile
+            ? "mt-4 flex justify-end"
+            : "mt-6 flex flex-col sm:flex-row justify-end gap-3"
+        }
+      >
+        <button
+          onClick={closeTradeMarket}
+          className="px-4 py-2 rounded-lg font-semibold bg-green-900 text-[#f4e7cd] hover:bg-green-800"
+        >
+          Start Race
+        </button>
+      </div>
+    </div>
+  );
   useTotalEliminationGuard({
     gameStarted,
     phase,
@@ -2006,14 +2220,24 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-full flex-1 min-h-0 flex justify-center mt-0 -translate-y-[50px] sm:-translate-y-[25px] md:translate-y-0 relative z-0 overflow-hidden">
-            <div className="w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 grid grid-cols-1 lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-[2.5px] md:gap-3 items-start">
-              <aside className="order-2 lg:order-1 mt-0 -translate-y-[57px] sm:-translate-y-[28.5px] md:translate-y-0">
-                <div className="space-y-3">
+          <div className="w-full flex-1 min-h-0 flex justify-center relative z-0 overflow-hidden">
+            <div className="game-layout w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 flex flex-col lg:grid lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-2 md:gap-3 items-stretch lg:items-start">
+              <div className="order-1 flex min-h-0 flex-1 lg:order-2">
+                <div
+                  role="region"
+                  aria-label="Race board"
+                  className="game-board-region flex w-full flex-1 items-stretch justify-center overflow-hidden rounded-[28px] border border-black/10 bg-[#c18c4b]/40 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+                >
+                  <BoardSurface horses={horses} />
+                </div>
+              </div>
+
+              <aside className="order-2 lg:order-1 min-h-0">
+                <div className="flex h-full min-h-0 flex-col gap-2 md:gap-3">
                   <div
                     role="region"
-                    aria-label="Your cards panel"
-                    className="bg-green-900/80 px-3 py-2 rounded-xl text-center shadow-lg border border-green-200/20"
+                    aria-label="Player card dock"
+                    className="player-card-dock shrink-0 bg-green-900/80 px-3 py-2 rounded-xl text-center shadow-lg border border-green-200/20"
                   >
                     <h3 className="font-bold mb-1 text-sm">
                       {currentPlayer ? "Your Cards" : "Player"}
@@ -2024,7 +2248,7 @@ const App: React.FC = () => {
                     {userPlayer?.eliminated ? (
                       <p className="text-xs font-semibold text-red-200">Eliminated</p>
                     ) : (
-                      <div className="flex flex-wrap justify-center gap-1 mt-2 max-h-28 overflow-hidden md:overflow-auto">
+                      <div className="player-card-list mt-2 flex flex-wrap justify-center gap-1 max-h-28 overflow-hidden md:overflow-auto">
                         {currentPlayerCards.length > 0 ? (
                           renderCards(currentPlayerCards)
                         ) : (
@@ -2033,6 +2257,15 @@ const App: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {showMobileTradePanel && (
+                    <section
+                      aria-label="Trading controls"
+                      className="flex min-h-0 flex-1 lg:hidden"
+                    >
+                      {renderTradePanel(true)}
+                    </section>
+                  )}
 
                   {leftPlayers.map((player) => (
                     <div
@@ -2059,11 +2292,7 @@ const App: React.FC = () => {
                 </div>
               </aside>
 
-              <div className="order-1 lg:order-2 flex justify-center items-center h-full min-h-0">
-                <BoardSurface horses={horses} />
-              </div>
-
-              <aside className="order-3 hidden md:block">
+              <aside className="order-3 hidden md:block min-h-0">
                 <div className="h-full max-h-full overflow-hidden md:overflow-auto pr-1 space-y-3">
                   {rightPlayers.length === 0 ? (
                     <div className="bg-green-900/70 rounded-xl px-3 py-1.5 shadow-lg border border-green-200/20 text-xs text-green-100">
@@ -2124,170 +2353,14 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {phase === "trade" && showTradeModal && (
-            <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-              <div className="w-full max-w-[920px] rounded-2xl bg-[#f4e7cd] text-green-900 shadow-2xl border border-green-900/20 px-6 py-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <h3 className="text-xl font-bold uppercase tracking-wide">
-                      Trading Window
-                    </h3>
-                    <p className="hidden md:block text-sm text-green-900/70">
-                      List any card for ${LISTING_PRICE}. Buy any listed card for $
-                      {LISTING_PRICE}.
-                    </p>
-                    <p className="text-xs text-green-900/60 mt-1">
-                      Auto-starts in {tradeSecondsLeft}s.
-                    </p>
-                  </div>
-                  <div className="text-sm font-semibold text-green-900/80 text-right">
-                    <div>Your balance: ${userPlayer?.balance.toFixed(2) ?? "0.00"}</div>
-                    <div className="text-xs font-semibold text-green-900/60">
-                      Buys left: {userBuysLeft} · Sells left: {userSellsLeft}
-                    </div>
-                    {isUserEliminated && (
-                      <div className="text-xs font-semibold text-red-400">
-                        You are eliminated.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-4 md:mt-6 flex md:hidden items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTradeTab("buy")}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${
-                      tradeTab === "buy"
-                        ? "bg-green-900 text-[#f4e7cd] border-green-900"
-                        : "bg-white/70 text-green-900 border-green-900/20"
-                    }`}
-                    aria-pressed={tradeTab === "buy"}
-                  >
-                    Buy
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTradeTab("sell")}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${
-                      tradeTab === "sell"
-                        ? "bg-green-900 text-[#f4e7cd] border-green-900"
-                        : "bg-white/70 text-green-900 border-green-900/20"
-                    }`}
-                    aria-pressed={tradeTab === "sell"}
-                  >
-                    Sell
-                  </button>
-                </div>
-
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className={tradeTab === "buy" ? "block" : "hidden md:block"}>
-                    <h4 className="text-sm font-bold uppercase tracking-widest text-green-900/60 mb-2">
-                      Market Listings
-                    </h4>
-                    <div className="space-y-2 max-h-[320px] overflow-auto pr-1">
-                      {tradeListings.length === 0 ? (
-                        <p className="text-sm text-green-900/70">
-                          No cards are listed yet.
-                        </p>
-                      ) : (
-                        tradeListings.map((listing) => {
-                          const seller =
-                            players.find((player) => player.id === listing.sellerId)
-                              ?.name ?? "Unknown";
-                          const isUserListing = listing.sellerId === 1;
-                          const canBuy =
-                            !isUserListing &&
-                            (userPlayer?.balance ?? 0) >= LISTING_PRICE &&
-                            userBuysLeft > 0;
-                          return (
-                            <div
-                              key={listing.id}
-                              className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 border border-green-900/10"
-                            >
-                              <div>
-                                <p className="text-sm font-semibold">
-                                  {formatCard(listing.card)}
-                                </p>
-                                <p className="text-xs text-green-900/60">
-                                  Seller: {isUserListing ? "You" : seller}
-                                </p>
-                              </div>
-                              {isUserListing ? (
-                                <button
-                                  onClick={() => handleCancelListing(listing.id)}
-                                  aria-label={`Cancel ${formatCard(listing.card)}`}
-                                  className="px-3 py-1 rounded-full text-xs font-semibold bg-green-900/10 text-green-900 hover:bg-green-900/20"
-                                >
-                                  Cancel
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleBuyListing(listing.id)}
-                                  aria-label={`Buy ${formatCard(listing.card)} for $${LISTING_PRICE}`}
-                                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                    canBuy
-                                      ? "bg-green-900 text-[#f4e7cd] hover:bg-green-800"
-                                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                  }`}
-                                  disabled={!canBuy}
-                                >
-                                  Buy ${LISTING_PRICE}
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={tradeTab === "sell" ? "block" : "hidden md:block"}>
-                    <h4 className="text-sm font-bold uppercase tracking-widest text-green-900/60 mb-2">
-                      Your Cards
-                    </h4>
-                    <div className="space-y-2 max-h-[320px] overflow-auto pr-1">
-                      {currentPlayerCards.length === 0 ? (
-                        <p className="text-sm text-green-900/70">
-                          You have no cards to list.
-                        </p>
-                      ) : (
-                        sortCardsByValue(currentPlayerCards).map((card, idx) => (
-                          <div
-                            key={`${card.value}-${card.suit}-${idx}`}
-                            className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-2 border border-green-900/10"
-                          >
-                            <span className="text-sm font-semibold">
-                              {formatCard(card)}
-                            </span>
-                            <button
-                              onClick={() => handleListCardForSale(card)}
-                              aria-label={`List ${formatCard(card)} for $${LISTING_PRICE}`}
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                userSellsLeft > 0
-                                  ? "bg-green-900 text-[#f4e7cd] hover:bg-green-800"
-                                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                              }`}
-                              disabled={userSellsLeft === 0}
-                            >
-                              List ${LISTING_PRICE}
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
-                  <button
-                    onClick={closeTradeMarket}
-                    className="px-4 py-2 rounded-lg font-semibold bg-green-900 text-[#f4e7cd] hover:bg-green-800"
-                  >
-                    Start Race
-                  </button>
-                </div>
-              </div>
+          {phase === "trade" && showTradeModal && !showMobileTradePanel && (
+            <div
+              className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Trading Window"
+            >
+              {renderTradePanel(false)}
             </div>
           )}
 

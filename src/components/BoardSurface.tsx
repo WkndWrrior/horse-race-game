@@ -10,7 +10,7 @@ interface BoardSurfaceProps {
 
 const BoardUnavailableState: React.FC = () => (
   <div
-    className="flex h-full min-h-[560px] w-full items-center justify-center rounded-[28px] border border-amber-200/20 bg-[radial-gradient(circle_at_top,rgba(73,35,10,0.95),rgba(18,8,3,0.98))] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)]"
+    className="flex h-full min-h-0 sm:min-h-[420px] lg:min-h-[560px] w-full items-center justify-center rounded-[28px] border border-amber-200/20 bg-[radial-gradient(circle_at_top,rgba(73,35,10,0.95),rgba(18,8,3,0.98))] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)]"
     role="status"
     aria-live="polite"
   >
@@ -33,7 +33,7 @@ const BoardRuntimeFailureState: React.FC<{ onRetry: () => void }> = ({
   onRetry,
 }) => (
   <div
-    className="flex h-full min-h-[560px] w-full items-center justify-center rounded-[28px] border border-rose-200/20 bg-[radial-gradient(circle_at_top,rgba(74,17,27,0.95),rgba(22,7,10,0.98))] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)]"
+    className="flex h-full min-h-0 sm:min-h-[420px] lg:min-h-[560px] w-full items-center justify-center rounded-[28px] border border-rose-200/20 bg-[radial-gradient(circle_at_top,rgba(74,17,27,0.95),rgba(22,7,10,0.98))] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)]"
     role="alert"
     aria-live="assertive"
   >
