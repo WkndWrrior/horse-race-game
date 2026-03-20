@@ -5,6 +5,16 @@ import { Horse } from "./types";
 import useViewportMode from "./hooks/useViewportMode";
 import { safeReadJson, safeWriteJson } from "./utils/storage";
 import { acquireScrollLock } from "./utils/scrollLock";
+import {
+  applyAiPurchases,
+  appendTradeListing,
+  buyTradeListing,
+  cancelTradeListing,
+  closeTradeSession,
+  createAiListings,
+  createTradeSession,
+  type TradeSessionState,
+} from "./utils/tradeSession";
 
 interface Card {
   value: number;
@@ -42,6 +52,7 @@ type TradeListing = {
   card: Card;
   sellerId: number;
 };
+type TradeSession = TradeSessionState<Player, Card>;
 type FinalStanding = {
   playerId: number;
   name: string;
@@ -328,17 +339,9 @@ const App: React.FC = () => {
   const hudRef = useRef<HTMLDivElement | null>(null);
   const lastRollByUserRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const tradeStateRef = useRef<{
-    players: Player[];
-    listings: TradeListing[];
-    buyCounts: Record<number, number>;
-    sellCounts: Record<number, number>;
-  }>({
-    players: [],
-    listings: [],
-    buyCounts: {},
-    sellCounts: {},
-  });
+  const tradeStateRef = useRef<TradeSession>(
+    createTradeSession<Player, Card>([], [], {}, {})
+  );
   const handleRollRef = useRef<() => void>(() => {});
   const handleNextRaceRef = useRef<() => void>(() => {});
   const listingCounterRef = useRef(0);
@@ -752,7 +755,6 @@ const App: React.FC = () => {
     if (!gameMode) return playersSnapshot;
     const amount = gameMode === "full" ? 200 : 100;
     const usedIds: number[] = [];
-    const eliminatedIds: number[] = [];
     let userBailed = false;
     let userName = "";
     let userReason = "";
@@ -779,7 +781,6 @@ const App: React.FC = () => {
       if (balance <= 0) {
         eliminated = true;
         balance = 0;
-        eliminatedIds.push(player.id);
       }
 
       return {
@@ -800,12 +801,6 @@ const App: React.FC = () => {
       });
     }
 
-    if (eliminatedIds.length > 0) {
-      setTradeListings((prev) =>
-        prev.filter((listing) => !eliminatedIds.includes(listing.sellerId))
-      );
-    }
-
     if (userBailed) {
       setBailoutPopup({
         playerName: userName,
@@ -821,105 +816,17 @@ const App: React.FC = () => {
     listingCounterRef.current += 1;
     return `listing-${listingCounterRef.current}`;
   };
-
-  const createAiListings = (playersSnapshot: Player[]) => {
-    const listings: TradeListing[] = [];
-    const updatedPlayers = playersSnapshot.map((player) => {
-      if (
-        player.eliminated ||
-        player.id === 1 ||
-        player.cards.length <= 1
-      )
-        return player;
-      const nextCards = [...player.cards];
-      const wantsTwo = nextCards.length > 1 && Math.random() < 0.35;
-      const maxListings = Math.max(nextCards.length - 1, 0);
-      const listCount = Math.min(wantsTwo ? 2 : 1, maxListings);
-      for (let i = 0; i < listCount; i += 1) {
-        const cardIndex = Math.floor(Math.random() * nextCards.length);
-        const [card] = nextCards.splice(cardIndex, 1);
-        listings.push({
-          id: createListingId(),
-          card,
-          sellerId: player.id,
-        });
-      }
-      return { ...player, cards: nextCards };
-    });
-    return { updatedPlayers, listings };
+  const commitTradeSession = (session: TradeSession) => {
+    tradeStateRef.current = session;
+    setPlayers(session.players);
+    setTradeListings(session.listings);
+    setTradeBuyCounts(session.buyCounts);
+    setTradeSellCounts(session.sellCounts);
   };
-
-  const applyAiPurchases = (
-    playersSnapshot: Player[],
-    listingsSnapshot: TradeListing[],
-    buyCountsSnapshot: Record<number, number>,
-    sellCountsSnapshot: Record<number, number>,
-    maxTransactions = Number.POSITIVE_INFINITY
-  ) => {
-    let listings = [...listingsSnapshot];
-    const updatedPlayers = playersSnapshot.map((player) => ({
-      ...player,
-      cards: [...player.cards],
-    }));
-    const eliminatedIds = new Set(
-      updatedPlayers.filter((player) => player.eliminated).map((player) => player.id)
-    );
-    const nextBuyCounts = { ...buyCountsSnapshot };
-    const nextSellCounts = { ...sellCountsSnapshot };
-    let changed = false;
-    let transactions = 0;
-
-    for (const player of updatedPlayers) {
-      if (transactions >= maxTransactions) break;
-      if (player.eliminated || player.id === 1 || player.balance < LISTING_PRICE) continue;
-      let purchases = 0;
-      const availableBuys =
-        MAX_TRADES_PER_PLAYER - (nextBuyCounts[player.id] ?? 0);
-      while (purchases < availableBuys && player.balance >= LISTING_PRICE) {
-        if (transactions >= maxTransactions) break;
-        if (Math.random() > 0.35) break;
-        const options = listings.filter((listing) => {
-          if (listing.sellerId === player.id) return false;
-          if (eliminatedIds.has(listing.sellerId)) return false;
-          const sellerSold = nextSellCounts[listing.sellerId] ?? 0;
-          return sellerSold < MAX_TRADES_PER_PLAYER;
-        });
-        if (options.length === 0) break;
-        const listing = options[Math.floor(Math.random() * options.length)];
-        player.balance -= LISTING_PRICE;
-        player.cards.push(listing.card);
-        const seller = updatedPlayers.find((entry) => entry.id === listing.sellerId);
-        if (seller) {
-          seller.balance += LISTING_PRICE;
-        }
-        nextBuyCounts[player.id] = (nextBuyCounts[player.id] ?? 0) + 1;
-        nextSellCounts[listing.sellerId] =
-          (nextSellCounts[listing.sellerId] ?? 0) + 1;
-        listings = listings.filter((entry) => entry.id !== listing.id);
-        purchases += 1;
-        transactions += 1;
-        changed = true;
-      }
-    }
-
-    if (!changed) {
-      return {
-        updatedPlayers: playersSnapshot,
-        listings: listingsSnapshot,
-        buyCounts: buyCountsSnapshot,
-        sellCounts: sellCountsSnapshot,
-        changed: false,
-      };
-    }
-
-    const finalPlayers = applyBailoutIfNeeded(updatedPlayers);
-    return {
-      updatedPlayers: finalPlayers,
-      listings,
-      buyCounts: nextBuyCounts,
-      sellCounts: nextSellCounts,
-      changed: true,
-    };
+  const resetTradeSession = (playersSnapshot: Player[]) => {
+    commitTradeSession(createTradeSession(playersSnapshot, [], {}, {}));
+    setTradeSecondsLeft(0);
+    setShowTradeModal(false);
   };
 
   const openTradeMarket = (playersSnapshot: Player[]) => {
@@ -942,20 +849,14 @@ const App: React.FC = () => {
     const tradeDurationMs = 35000;
     tradeEndsAtRef.current = Date.now() + tradeDurationMs;
     setTradeSecondsLeft(Math.ceil(tradeDurationMs / 1000));
-    const { updatedPlayers, listings } = createAiListings(playersSnapshot);
-    const initialBuyCounts: Record<number, number> = {};
-    const initialSellCounts: Record<number, number> = {};
-    setPlayers(updatedPlayers);
-    setTradeListings(listings);
-    setTradeBuyCounts(initialBuyCounts);
-    setTradeSellCounts(initialSellCounts);
+    const { session: initialSession } = createAiListings(
+      createTradeSession(playersSnapshot, [], {}, {}),
+      {
+        createListingId,
+      }
+    );
     setShowTradeModal(true);
-    tradeStateRef.current = {
-      players: updatedPlayers,
-      listings,
-      buyCounts: initialBuyCounts,
-      sellCounts: initialSellCounts,
-    };
+    commitTradeSession(initialSession);
     setPhase("trade");
     addLog("Scratch phase complete. Trading window is open.");
     tradeIntervalRef.current = window.setInterval(() => {
@@ -977,24 +878,27 @@ const App: React.FC = () => {
         tradeAiTimeoutRef.current = null;
         if (!tradeEndsAtRef.current) return;
         const snapshot = tradeStateRef.current;
-        const aiPass = applyAiPurchases(
-          snapshot.players,
-          snapshot.listings,
-          snapshot.buyCounts,
-          snapshot.sellCounts,
-          1
-        );
+        const aiPass = applyAiPurchases(snapshot, {
+          listingPrice: LISTING_PRICE,
+          maxTradesPerPlayer: MAX_TRADES_PER_PLAYER,
+          maxTransactions: 1,
+        });
         if (aiPass.changed) {
-          setPlayers(aiPass.updatedPlayers);
-          setTradeListings(aiPass.listings);
-          setTradeBuyCounts(aiPass.buyCounts);
-          setTradeSellCounts(aiPass.sellCounts);
-          tradeStateRef.current = {
-            players: aiPass.updatedPlayers,
-            listings: aiPass.listings,
-            buyCounts: aiPass.buyCounts,
-            sellCounts: aiPass.sellCounts,
-          };
+          const finalPlayers = applyBailoutIfNeeded(aiPass.session.players);
+          const eliminatedIds = new Set(
+            finalPlayers.filter((player) => player.eliminated).map((player) => player.id)
+          );
+          const finalListings =
+            eliminatedIds.size === 0
+              ? aiPass.session.listings
+              : aiPass.session.listings.filter(
+                  (listing) => !eliminatedIds.has(listing.sellerId)
+                );
+          commitTradeSession({
+            ...aiPass.session,
+            players: finalPlayers,
+            listings: finalListings,
+          });
         }
         scheduleAiPurchase();
       }, delayMs);
@@ -1045,22 +949,9 @@ const App: React.FC = () => {
     }
     tradeEndsAtRef.current = null;
     setTradeSecondsLeft(0);
-    setTradeBuyCounts({});
-    setTradeSellCounts({});
     setShowTradeModal(false);
-    const listingsSnapshot = tradeStateRef.current.listings;
-    const playersSnapshot = tradeStateRef.current.players;
-    if (listingsSnapshot.length > 0) {
-      const returnedPlayers = playersSnapshot.map((player) => {
-        const returns = listingsSnapshot
-          .filter((listing) => listing.sellerId === player.id)
-          .map((listing) => listing.card);
-        if (returns.length === 0) return player;
-        return { ...player, cards: [...player.cards, ...returns] };
-      });
-      setPlayers(returnedPlayers);
-    }
-    setTradeListings([]);
+    const closedSession = closeTradeSession(tradeStateRef.current);
+    commitTradeSession(closedSession.session);
     setPhase("race");
     addLog("Trading closed. The race is on.");
   };
@@ -1082,7 +973,7 @@ const App: React.FC = () => {
       cards: hands[idx],
     }));
 
-    setPlayers(playersWithCards);
+    resetTradeSession(playersWithCards);
     setHorses(initialiseHorses());
     setGameMode(mode);
     setCurrentRace(1);
@@ -1100,11 +991,6 @@ const App: React.FC = () => {
     setShowFinalSummary(false);
     setBailoutUsedByPlayer({});
     setBailoutPopup(null);
-    setTradeListings([]);
-    setTradeSecondsLeft(0);
-    setTradeBuyCounts({});
-    setTradeSellCounts({});
-    setShowTradeModal(false);
     finalStatsRecordedRef.current = false;
     lastRollByUserRef.current = false;
     listingCounterRef.current = 0;
@@ -1147,7 +1033,7 @@ const App: React.FC = () => {
 
   const resetGame = () => {
     setGameStarted(false);
-    setPlayers([]);
+    resetTradeSession([]);
     setGameMode(null);
     setCurrentRace(1);
     setHorses([]);
@@ -1169,11 +1055,6 @@ const App: React.FC = () => {
     setShowFinalSummary(false);
     setBailoutUsedByPlayer({});
     setBailoutPopup(null);
-    setTradeListings([]);
-    setTradeSecondsLeft(0);
-    setTradeBuyCounts({});
-    setTradeSellCounts({});
-    setShowTradeModal(false);
     finalStatsRecordedRef.current = false;
     lastRollByUserRef.current = false;
     listingCounterRef.current = 0;
@@ -1547,7 +1428,7 @@ const App: React.FC = () => {
         ? activeIndices[(nextRaceNumber - 1) % activeIndices.length]
         : 0;
 
-    setPlayers(updatedPlayers);
+    resetTradeSession(updatedPlayers);
     setHorses(initialiseHorses());
     setScratchHistory([]);
     setPot(0);
@@ -1556,11 +1437,6 @@ const App: React.FC = () => {
     setFinalStandings([]);
     setShowFinalSummary(false);
     setShowConfetti(false);
-    setTradeListings([]);
-    setTradeSecondsLeft(0);
-    setTradeBuyCounts({});
-    setTradeSellCounts({});
-    setShowTradeModal(false);
     lastRollByUserRef.current = false;
     if (summaryTimeoutRef.current) {
       window.clearTimeout(summaryTimeoutRef.current);
@@ -1611,74 +1487,57 @@ const App: React.FC = () => {
 
   const handleListCardForSale = (card: Card) => {
     if (phase !== "trade") return;
-    const seller = players.find((player) => player.id === 1);
+    const session = tradeStateRef.current;
+    const seller = session.players.find((player) => player.id === 1);
     if (!seller || seller.eliminated) return;
-    const soldCount = tradeSellCounts[seller.id] ?? 0;
-    const activeListings = tradeListings.filter(
+    const soldCount = session.sellCounts[seller.id] ?? 0;
+    const activeListings = session.listings.filter(
       (listing) => listing.sellerId === seller.id
     ).length;
     if (soldCount + activeListings >= MAX_TRADES_PER_PLAYER) return;
-    const cardIndex = seller.cards.findIndex(
-      (entry) => entry.value === card.value && entry.suit === card.suit
+    const result = appendTradeListing(
+      session,
+      seller.id,
+      card,
+      createListingId()
     );
-    if (cardIndex < 0) return;
-    const updatedPlayers = players.map((player) => {
-      if (player.id !== seller.id) return player;
-      const nextCards = [...player.cards];
-      nextCards.splice(cardIndex, 1);
-      return { ...player, cards: nextCards };
-    });
-    setPlayers(updatedPlayers);
-    setTradeListings((prev) => [
-      ...prev,
-      { id: createListingId(), card, sellerId: seller.id },
-    ]);
+    if (!result.changed) return;
+    commitTradeSession(result.session);
   };
 
   const handleCancelListing = (listingId: string) => {
-    const listing = tradeListings.find((entry) => entry.id === listingId);
-    if (!listing) return;
-    const updatedPlayers = players.map((player) => {
-      if (player.id !== listing.sellerId) return player;
-      return { ...player, cards: [...player.cards, listing.card] };
-    });
-    setPlayers(updatedPlayers);
-    setTradeListings((prev) => prev.filter((entry) => entry.id !== listingId));
+    const result = cancelTradeListing(tradeStateRef.current, listingId);
+    if (!result.changed) return;
+    commitTradeSession(result.session);
   };
 
   const handleBuyListing = (listingId: string) => {
-    const listing = tradeListings.find((entry) => entry.id === listingId);
+    const session = tradeStateRef.current;
+    const listing = session.listings.find((entry) => entry.id === listingId);
     if (!listing || listing.sellerId === 1) return;
-    const buyer = players.find((player) => player.id === 1);
+    const buyer = session.players.find((player) => player.id === 1);
     if (!buyer || buyer.eliminated || buyer.balance < LISTING_PRICE) return;
-    const buyerPurchases = tradeBuyCounts[buyer.id] ?? 0;
-    if (buyerPurchases >= MAX_TRADES_PER_PLAYER) return;
-    const sellerSold = tradeSellCounts[listing.sellerId] ?? 0;
-    if (sellerSold >= MAX_TRADES_PER_PLAYER) return;
-    const updatedPlayers = players.map((player) => {
-      if (player.id === buyer.id) {
-        return {
-          ...player,
-          balance: player.balance - LISTING_PRICE,
-          cards: [...player.cards, listing.card],
-        };
-      }
-      if (player.id === listing.sellerId) {
-        return { ...player, balance: player.balance + LISTING_PRICE };
-      }
-      return player;
+    const result = buyTradeListing(session, listingId, {
+      buyerId: buyer.id,
+      listingPrice: LISTING_PRICE,
+      maxTradesPerPlayer: MAX_TRADES_PER_PLAYER,
     });
-    const nextPlayers = applyBailoutIfNeeded(updatedPlayers);
-    setPlayers(nextPlayers);
-    setTradeListings((prev) => prev.filter((entry) => entry.id !== listing.id));
-    setTradeBuyCounts((prev) => ({
-      ...prev,
-      [buyer.id]: (prev[buyer.id] ?? 0) + 1,
-    }));
-    setTradeSellCounts((prev) => ({
-      ...prev,
-      [listing.sellerId]: (prev[listing.sellerId] ?? 0) + 1,
-    }));
+    if (!result.changed) return;
+    const nextPlayers = applyBailoutIfNeeded(result.session.players);
+    const eliminatedIds = new Set(
+      nextPlayers.filter((player) => player.eliminated).map((player) => player.id)
+    );
+    const nextListings =
+      eliminatedIds.size === 0
+        ? result.session.listings
+        : result.session.listings.filter(
+            (entry) => !eliminatedIds.has(entry.sellerId)
+          );
+    commitTradeSession({
+      ...result.session,
+      players: nextPlayers,
+      listings: nextListings,
+    });
   };
 
   handleRollRef.current = handleRoll;
@@ -1745,15 +1604,6 @@ const App: React.FC = () => {
       }
     }
   }, [players, currentPlayerIndex, getNextActiveIndex]);
-
-  useEffect(() => {
-    tradeStateRef.current = {
-      players,
-      listings: tradeListings,
-      buyCounts: tradeBuyCounts,
-      sellCounts: tradeSellCounts,
-    };
-  }, [players, tradeListings, tradeBuyCounts, tradeSellCounts]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2151,6 +2001,7 @@ const App: React.FC = () => {
                   canRoll ? "cursor-pointer" : "cursor-not-allowed opacity-60"
                 }`}
                 role="button"
+                aria-label="Roll dice"
                   tabIndex={canRoll ? 0 : -1}
                   onClick={canRoll ? handleRoll : undefined}
                   onKeyDown={(event) => {
@@ -2203,7 +2054,11 @@ const App: React.FC = () => {
             <div className="w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 grid grid-cols-1 lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-[2.5px] md:gap-3 items-start">
               <aside className="order-2 lg:order-1 mt-0 -translate-y-[57px] sm:-translate-y-[28.5px] md:translate-y-0">
                 <div className="space-y-3">
-                  <div className="bg-green-900/80 px-3 py-2 rounded-xl text-center shadow-lg border border-green-200/20">
+                  <div
+                    role="region"
+                    aria-label="Your cards panel"
+                    className="bg-green-900/80 px-3 py-2 rounded-xl text-center shadow-lg border border-green-200/20"
+                  >
                     <h3 className="font-bold mb-1 text-sm">
                       {currentPlayer ? "Your Cards" : "Player"}
                     </h3>
@@ -2405,6 +2260,7 @@ const App: React.FC = () => {
                               {isUserListing ? (
                                 <button
                                   onClick={() => handleCancelListing(listing.id)}
+                                  aria-label={`Cancel ${formatCard(listing.card)}`}
                                   className="px-3 py-1 rounded-full text-xs font-semibold bg-green-900/10 text-green-900 hover:bg-green-900/20"
                                 >
                                   Cancel
@@ -2412,6 +2268,7 @@ const App: React.FC = () => {
                               ) : (
                                 <button
                                   onClick={() => handleBuyListing(listing.id)}
+                                  aria-label={`Buy ${formatCard(listing.card)} for $${LISTING_PRICE}`}
                                   className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                     canBuy
                                       ? "bg-green-900 text-[#f4e7cd] hover:bg-green-800"
@@ -2449,6 +2306,7 @@ const App: React.FC = () => {
                             </span>
                             <button
                               onClick={() => handleListCardForSale(card)}
+                              aria-label={`List ${formatCard(card)} for $${LISTING_PRICE}`}
                               className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                 userSellsLeft > 0
                                   ? "bg-green-900 text-[#f4e7cd] hover:bg-green-800"
