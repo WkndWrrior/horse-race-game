@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import "./App.css";
 import RaceBoard3D from "./components/RaceBoard3D";
 import { Horse } from "./types";
+import useViewportMode from "./hooks/useViewportMode";
 import { safeReadJson, safeWriteJson } from "./utils/storage";
 
 interface Card {
@@ -309,6 +310,7 @@ const App: React.FC = () => {
   const [isRolling, setIsRolling] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiSeed, setConfettiSeed] = useState(0);
+  const { isMobile } = useViewportMode();
   const rollTimeoutRef = useRef<number | null>(null);
   const summaryTimeoutRef = useRef<number | null>(null);
   const summaryDelayRef = useRef<number | null>(null);
@@ -1735,8 +1737,6 @@ const App: React.FC = () => {
         {formatCard(card)}
       </div>
     ));
-  const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 768;
-
   useEffect(() => {
     if (!players.length) return;
     if (players[currentPlayerIndex]?.eliminated) {
@@ -1763,14 +1763,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (phase === "trade" && showTradeModal) {
-      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
       setTradeTab(isMobile ? "sell" : "buy");
     }
-  }, [phase, showTradeModal]);
+  }, [phase, showTradeModal, isMobile]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const isMobile = window.innerWidth < 768;
     const shouldLock = phase === "trade" || (gameStarted && isMobile);
     if (shouldLock) {
       if (bodyOverflowRef.current === null) {
@@ -1791,7 +1789,7 @@ const App: React.FC = () => {
       document.documentElement.style.overflow = htmlOverflowRef.current;
       htmlOverflowRef.current = null;
     }
-  }, [phase, gameStarted]);
+  }, [phase, gameStarted, isMobile]);
 
   useEffect(() => {
     const appRoot = appRootRef.current;
@@ -1806,7 +1804,7 @@ const App: React.FC = () => {
     const updateHudHeight = () => {
       if (!appRootRef.current || !hudRef.current) return;
       const height = hudRef.current.getBoundingClientRect().height;
-      const gap = window.innerWidth < 768 ? 4 : 0;
+      const gap = isMobile ? 4 : 0;
       appRootRef.current.style.setProperty(
         "--hud-h",
         `${Math.ceil(height) + gap}px`
@@ -1827,7 +1825,7 @@ const App: React.FC = () => {
     return () => {
       observer.disconnect();
     };
-  }, [gameStarted]);
+  }, [gameStarted, isMobile]);
 
   useEffect(() => {
     return () => {
@@ -1918,10 +1916,9 @@ const App: React.FC = () => {
       style={
         {
           "--hud-h": "144px",
-          overflowY:
-            !gameStarted && openHomePanel && isMobileViewport ? "auto" : "hidden",
+          overflowY: !gameStarted && openHomePanel && isMobile ? "auto" : "hidden",
           WebkitOverflowScrolling:
-            !gameStarted && openHomePanel && isMobileViewport ? "touch" : undefined,
+            !gameStarted && openHomePanel && isMobile ? "touch" : undefined,
         } as React.CSSProperties
       }
       className={`relative flex flex-col items-center h-[100dvh] min-h-[100vh] overflow-hidden text-white ${
@@ -1932,7 +1929,7 @@ const App: React.FC = () => {
         <div
           className="w-full flex flex-col text-center"
           style={
-            !gameStarted && openHomePanel && isMobileViewport
+            !gameStarted && openHomePanel && isMobile
               ? { paddingBottom: "48px" }
               : undefined
           }
