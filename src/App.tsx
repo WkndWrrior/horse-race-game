@@ -4,7 +4,12 @@ import BoardSurface from "./components/BoardSurface";
 import { Horse } from "./types";
 import useViewportMode from "./hooks/useViewportMode";
 import useTotalEliminationGuard from "./hooks/useTotalEliminationGuard";
-import { safeReadJson, safeWriteJson } from "./utils/storage";
+import {
+  safeReadJson,
+  safeReadStatsEnvelope,
+  safeRemoveJson,
+  safeWriteStatsEnvelope,
+} from "./utils/storage";
 import { acquireScrollLock } from "./utils/scrollLock";
 import {
   applyAiPurchases,
@@ -176,8 +181,42 @@ const PLAYER_NAMES = [
 const coerceStat = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) ? value : 0;
 
-const DiceFace: React.FC<{ value: number; faceClass: string }> = ({ value, faceClass }) => (
-  <div className={`dice-face ${faceClass}`}>
+const parseStoredPlayerStats = (stored: unknown): PlayerStats => {
+  if (!stored || typeof stored !== "object") {
+    return EMPTY_STATS;
+  }
+
+  const parsed = stored as Partial<PlayerStats> & {
+    wins?: number;
+    bestBalance?: number;
+  };
+  if (parsed?.half && parsed?.full) {
+    return {
+      half: {
+        wins: coerceStat(parsed.half.wins),
+        bestBalance: coerceStat(parsed.half.bestBalance),
+      },
+      full: {
+        wins: coerceStat(parsed.full.wins),
+        bestBalance: coerceStat(parsed.full.bestBalance),
+      },
+    };
+  }
+
+  if (Number.isFinite(parsed.wins) || Number.isFinite(parsed.bestBalance)) {
+    const wins = coerceStat(parsed.wins);
+    const bestBalance = coerceStat(parsed.bestBalance);
+    return {
+      half: { wins, bestBalance },
+      full: { wins, bestBalance },
+    };
+  }
+
+  return EMPTY_STATS;
+};
+
+const DicePips: React.FC<{ value: number }> = ({ value }) => (
+  <>
     {DICE_PIPS[value].map(([x, y], idx) => (
       <span
         key={`${value}-${idx}`}
@@ -185,6 +224,18 @@ const DiceFace: React.FC<{ value: number; faceClass: string }> = ({ value, faceC
         style={{ left: `${x}%`, top: `${y}%` }}
       />
     ))}
+  </>
+);
+
+const DiceFace: React.FC<{ value: number; faceClass: string }> = ({ value, faceClass }) => (
+  <div className={`dice-face ${faceClass}`}>
+    <DicePips value={value} />
+  </div>
+);
+
+const FlatDiceFace: React.FC<{ value: number }> = ({ value }) => (
+  <div className="dice-flat-face">
+    <DicePips value={value} />
   </div>
 );
 
@@ -195,22 +246,27 @@ const DiceCube: React.FC<{
   size?: number;
 }> = ({ value, rotation, rolling, size = 84 }) => (
   <div
-    className={`dice ${rolling ? "dice-rolling" : ""}`}
+    className="dice"
     style={{ "--dice-size": `${size}px` } as React.CSSProperties}
     aria-label={`Die showing ${value}`}
     data-value={value}
+    data-render-mode={rolling ? "flat" : "cube"}
   >
-    <div
-      className="dice-cube"
-      style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}
-    >
-      <DiceFace value={value} faceClass="dice-face-front" />
-      <DiceFace value={value} faceClass="dice-face-back" />
-      <DiceFace value={value} faceClass="dice-face-right" />
-      <DiceFace value={value} faceClass="dice-face-left" />
-      <DiceFace value={value} faceClass="dice-face-top" />
-      <DiceFace value={value} faceClass="dice-face-bottom" />
-    </div>
+    {rolling ? (
+      <FlatDiceFace value={value} />
+    ) : (
+      <div
+        className="dice-cube"
+        style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}
+      >
+        <DiceFace value={value} faceClass="dice-face-front" />
+        <DiceFace value={value} faceClass="dice-face-back" />
+        <DiceFace value={value} faceClass="dice-face-right" />
+        <DiceFace value={value} faceClass="dice-face-left" />
+        <DiceFace value={value} faceClass="dice-face-top" />
+        <DiceFace value={value} faceClass="dice-face-bottom" />
+      </div>
+    )}
   </div>
 );
 
@@ -283,38 +339,13 @@ const App: React.FC = () => {
     null
   );
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => {
-    const stored = safeReadJson<unknown>(STATS_STORAGE_KEY, null);
-    if (!stored || typeof stored !== "object") {
-      return EMPTY_STATS;
+    const storedEnvelope = safeReadStatsEnvelope<unknown>(STATS_STORAGE_KEY, null);
+    if (storedEnvelope !== null) {
+      return parseStoredPlayerStats(storedEnvelope);
     }
 
-    const parsed = stored as Partial<PlayerStats> & {
-      wins?: number;
-      bestBalance?: number;
-    };
-    if (parsed?.half && parsed?.full) {
-      return {
-        half: {
-          wins: coerceStat(parsed.half.wins),
-          bestBalance: coerceStat(parsed.half.bestBalance),
-        },
-        full: {
-          wins: coerceStat(parsed.full.wins),
-          bestBalance: coerceStat(parsed.full.bestBalance),
-        },
-      };
-    }
-
-    if (Number.isFinite(parsed.wins) || Number.isFinite(parsed.bestBalance)) {
-      const wins = coerceStat(parsed.wins);
-      const bestBalance = coerceStat(parsed.bestBalance);
-      return {
-        half: { wins, bestBalance },
-        full: { wins, bestBalance },
-      };
-    }
-
-    return EMPTY_STATS;
+    const legacyStats = safeReadJson<unknown>(STATS_STORAGE_KEY, null);
+    return parseStoredPlayerStats(legacyStats);
   });
   const [dieRotations, setDieRotations] = useState<[DiceRotation, DiceRotation]>([
     { x: 0, y: 0 },
@@ -336,6 +367,7 @@ const App: React.FC = () => {
   const tradeDelayRef = useRef<number | null>(null);
   const tradeAiDelayRef = useRef<number | null>(null);
   const finalStatsRecordedRef = useRef(false);
+  const skipNextStatsPersistRef = useRef(false);
   const appRootRef = useRef<HTMLDivElement | null>(null);
   const hudRef = useRef<HTMLDivElement | null>(null);
   const lastRollByUserRef = useRef(false);
@@ -1777,8 +1809,18 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    safeWriteJson(STATS_STORAGE_KEY, playerStats);
+    if (skipNextStatsPersistRef.current) {
+      skipNextStatsPersistRef.current = false;
+      return;
+    }
+    safeWriteStatsEnvelope(STATS_STORAGE_KEY, playerStats);
   }, [playerStats]);
+
+  const resetPlayerStats = useCallback(() => {
+    skipNextStatsPersistRef.current = true;
+    safeRemoveJson(STATS_STORAGE_KEY);
+    setPlayerStats(EMPTY_STATS);
+  }, []);
 
   useEffect(() => {
     if (phase === "trade" && showTradeModal) {
@@ -2003,21 +2045,30 @@ const App: React.FC = () => {
                   Player Stats
                 </button>
                 {openHomePanel === "stats" && (
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-semibold">
-                    <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
-                      <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
-                        Half Day
-                      </p>
-                      <p>Wins: {playerStats.half.wins}</p>
-                      <p>Highest Finish: ${playerStats.half.bestBalance.toFixed(2)}</p>
+                  <div className="mt-3 space-y-3 text-sm font-semibold">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
+                        <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
+                          Half Day
+                        </p>
+                        <p>Wins: {playerStats.half.wins}</p>
+                        <p>Highest Finish: ${playerStats.half.bestBalance.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
+                        <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
+                          Full Day
+                        </p>
+                        <p>Wins: {playerStats.full.wins}</p>
+                        <p>Highest Finish: ${playerStats.full.bestBalance.toFixed(2)}</p>
+                      </div>
                     </div>
-                    <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
-                      <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
-                        Full Day
-                      </p>
-                      <p>Wins: {playerStats.full.wins}</p>
-                      <p>Highest Finish: ${playerStats.full.bestBalance.toFixed(2)}</p>
-                    </div>
+                    <button
+                      type="button"
+                      className="rounded-full border border-[#8b5a2b]/30 bg-white/55 px-3 py-1.5 text-xs uppercase tracking-wide text-[#6b4b2a] transition hover:bg-white/70"
+                      onClick={resetPlayerStats}
+                    >
+                      Reset Stats
+                    </button>
                   </div>
                 )}
               </div>
@@ -2081,7 +2132,11 @@ const App: React.FC = () => {
       ) : (
         <div className="w-full flex flex-col items-center flex-1 min-h-0 relative isolate pt-[var(--hud-h)] md:pt-0">
           {showConfetti && (
-            <div className="confetti-container" aria-hidden="true">
+            <div
+              className="confetti-container confetti-container--below-hud"
+              aria-hidden="true"
+              data-testid="confetti-container"
+            >
               {confettiPieces.map((piece) => (
                 <span
                   key={piece.id}
@@ -2098,7 +2153,9 @@ const App: React.FC = () => {
           )}
           <div
             ref={hudRef}
-            className="w-full flex flex-col items-center shrink-0 bg-[#e7d7b8] fixed top-0 left-0 right-0 z-50 md:static md:z-auto md:bg-transparent"
+            role="region"
+            aria-label="Game HUD"
+            className="game-hud-layer w-full flex flex-col items-center shrink-0 bg-[#e7d7b8] fixed top-0 left-0 right-0 z-50 md:bg-transparent"
           >
             <div className="w-full px-3 lg:px-0 lg:w-2/3 mt-3 mb-4 flex items-center justify-between">
               <div className="space-y-2">
@@ -2168,7 +2225,7 @@ const App: React.FC = () => {
               <div className="w-full flex justify-center md:flex-1">
                 <div
                 className={`dice-panel relative z-20 w-full max-w-none md:max-w-[360px] rounded-lg md:rounded-2xl border border-green-200/20 bg-green-900/85 px-2 py-0 md:px-5 md:py-1 shadow-sm md:shadow-lg ${
-                  canRoll ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+                  canRoll ? "cursor-pointer" : "cursor-not-allowed dice-panel-disabled"
                 }`}
                 role="button"
                 aria-label="Roll dice"
@@ -2189,7 +2246,7 @@ const App: React.FC = () => {
                   <p className="text-xl font-bold text-yellow-100 mt-0.5 md:mt-1">
                     {rollTotal ?? "—"}
                   </p>
-                  <div className="mt-1.5 md:mt-2 flex items-center justify-center gap-4">
+                  <div className="dice-stage mt-1.5 md:mt-2">
                     <DiceCube
                       value={dieOneValue}
                       rotation={dieRotations[0]}

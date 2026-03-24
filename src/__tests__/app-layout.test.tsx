@@ -25,6 +25,16 @@ const advanceBy = (ms: number) => {
   });
 };
 
+const advanceUntil = (predicate: () => boolean, stepMs = 200, maxSteps = 100) => {
+  for (let step = 0; step < maxSteps; step += 1) {
+    if (predicate()) {
+      return true;
+    }
+    advanceBy(stepMs);
+  }
+  return predicate();
+};
+
 describe("App layout", () => {
   let randomSpy: jest.SpyInstance<number, []>;
 
@@ -49,6 +59,35 @@ describe("App layout", () => {
     expect(
       screen.getByRole("region", { name: /player card dock/i })
     ).toBeInTheDocument();
+  });
+
+  it("uses flat dice rendering while a roll is in progress", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /half day \(4 races\)/i }));
+    fireEvent.click(screen.getByRole("button", { name: /roll dice/i }));
+
+    screen.getAllByLabelText(/die showing/i).forEach((die) => {
+      expect(die).toHaveAttribute("data-render-mode", "flat");
+    });
+
+    advanceBy(800);
+
+    screen.getAllByLabelText(/die showing/i).forEach((die) => {
+      expect(die).toHaveAttribute("data-render-mode", "cube");
+    });
+  });
+
+  it("keeps the dice panel opaque while disabled", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /half day \(4 races\)/i }));
+    fireEvent.click(screen.getByRole("button", { name: /roll dice/i }));
+
+    const dicePanel = screen.getByRole("button", { name: /roll dice/i });
+
+    expect(dicePanel).toHaveClass("dice-panel-disabled");
+    expect(dicePanel).not.toHaveClass("opacity-60");
   });
 
   it("keeps the board and player card dock mounted in mobile trade mode", () => {
@@ -139,5 +178,71 @@ describe("App layout", () => {
     advanceBy(1500);
 
     expect(screen.getByRole("dialog", { name: /trading window/i })).toBeInTheDocument();
+  });
+
+  it("keeps the desktop HUD in its own isolated layer", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /half day \(4 races\)/i }));
+
+    expect(screen.getByRole("region", { name: /game hud/i })).toHaveClass(
+      "game-hud-layer"
+    );
+  });
+
+  it("keeps race-finish confetti below the HUD", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /half day \(4 races\)/i }));
+
+    randomSpy.mockImplementation(
+      makeRandomSequence([
+        0, 0, 0, 0, 0, 0,
+        0, 0.2, 0, 0, 0, 0,
+        0, 0.34, 0, 0, 0, 0,
+        0, 0.51, 0, 0, 0, 0,
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+        0, 0.8334, 0, 0, 0, 0,
+      ])
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /roll dice/i }));
+
+    advanceBy(800);
+    advanceBy(1500);
+    advanceBy(800);
+    advanceBy(800);
+    advanceBy(800);
+    advanceBy(800);
+    advanceBy(800);
+    advanceBy(1500);
+
+    fireEvent.click(screen.getByRole("button", { name: /start race/i }));
+
+    expect(
+      advanceUntil(() => screen.queryByText(/click to roll the dice/i) !== null)
+    ).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: /roll dice/i }));
+
+    expect(
+      advanceUntil(() => screen.queryByTestId("confetti-container") !== null)
+    ).toBe(true);
+
+    const confetti = screen.getByTestId("confetti-container");
+
+    expect(confetti).toBeInTheDocument();
+    expect(confetti).toHaveClass("confetti-container--below-hud");
   });
 });

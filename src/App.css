@@ -38,13 +38,14 @@
 }
 
 .dice {
+  position: relative;
   width: var(--dice-size);
   height: var(--dice-size);
+  contain: layout paint;
+}
+
+.dice[data-render-mode="cube"] {
   perspective: 900px;
-  transform: translateZ(0);
-  will-change: transform;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
 }
 
 .dice-cube {
@@ -53,10 +54,23 @@
   height: 100%;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  transition: transform 0.85s cubic-bezier(0.2, 0.8, 0.2, 1.2);
-  will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+
+.dice-flat-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  box-shadow:
+    inset 0 8px 14px rgba(255, 255, 255, 0.65),
+    inset 0 -6px 12px rgba(15, 23, 42, 0.12),
+    0 10px 18px rgba(15, 23, 42, 0.18);
+  animation: dice-flat-roll 0.7s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
 
 .dice-face {
@@ -109,15 +123,44 @@
     0 1px 2px rgba(15, 23, 42, 0.4);
 }
 
-.dice-rolling {
-  animation: dice-bounce 0.6s ease;
-}
-
 .dice-panel {
   touch-action: manipulation;
-  transform: translateZ(0);
-  will-change: transform;
   isolation: isolate;
+  contain: paint;
+}
+
+.dice-panel-disabled::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(15, 23, 42, 0.12);
+  pointer-events: none;
+}
+
+.dice-stage {
+  display: flex;
+  min-height: 78px;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  overflow: hidden;
+  padding: 8px 0 10px;
+  contain: paint;
+}
+
+.game-hud-layer {
+  isolation: isolate;
+}
+
+@media (min-width: 768px) {
+  .game-hud-layer {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    z-index: 30;
+  }
 }
 
 .game-layout {
@@ -190,27 +233,33 @@
   }
 }
 
-@keyframes dice-bounce {
+@keyframes dice-flat-roll {
   0% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0) rotate(0deg) scale(1);
   }
-  35% {
-    transform: translateY(-10px) rotate(2deg);
+  25% {
+    transform: translateY(-8px) rotate(-7deg) scale(1.03);
   }
-  65% {
-    transform: translateY(4px) rotate(-2deg);
+  55% {
+    transform: translateY(5px) rotate(6deg) scale(0.98);
   }
   100% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0) rotate(0deg) scale(1);
   }
 }
 
 .confetti-container {
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
   overflow: hidden;
   z-index: 60;
+}
+
+.confetti-container--below-hud {
+  top: var(--hud-h);
 }
 
 .confetti-piece {

@@ -8,7 +8,7 @@ jest.mock("../components/BoardSurface", () => ({
 }));
 
 const getUserCardsPanel = () =>
-  screen.getByRole("region", { name: /your cards panel/i });
+  screen.getByRole("region", { name: /player card dock/i });
 
 const makeRandomSequence = (values: number[]) => {
   let index = 0;
