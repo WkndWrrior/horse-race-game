@@ -47,6 +47,17 @@ describe("BoardSurface", () => {
     expect(screen.getByTestId("race-board-3d")).toBeInTheDocument();
   });
 
+  it("keeps a minimum board height when the 3D board loads successfully", () => {
+    mockIsWebGLSupported.mockReturnValue(true);
+
+    render(<BoardSurface />);
+
+    expect(screen.getByTestId("race-board-3d").parentElement).toHaveClass(
+      "sm:min-h-[420px]",
+      "lg:min-h-[560px]"
+    );
+  });
+
   it("shows the unsupported state when the board runtime throws", () => {
     mockIsWebGLSupported.mockReturnValue(true);
     (globalThis as { __boardSurfaceShouldThrow?: boolean }).__boardSurfaceShouldThrow = true;
