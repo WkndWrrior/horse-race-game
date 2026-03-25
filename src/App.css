@@ -225,7 +225,7 @@
 
 @media (min-width: 1024px) {
   .board-surface-live-shell {
-    height: min(560px, calc(100dvh - var(--hud-h, 0px) - 1rem));
+    height: min(540px, calc(100dvh - var(--hud-h, 0px) - 2rem));
     min-height: 280px;
   }
 }
