@@ -8,12 +8,14 @@ interface BoardSurfaceProps {
   horses?: Horse[];
 }
 
-const boardSurfaceShellClassName =
-  "flex h-full min-h-0 w-full items-center justify-center rounded-[28px] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)] sm:min-h-[420px] lg:min-h-[560px]";
+const boardSurfaceMinHeightClassName =
+  "h-full min-h-0 w-full sm:min-h-[420px] lg:min-h-[560px]";
+const boardSurfaceFallbackShellClassName =
+  `flex ${boardSurfaceMinHeightClassName} items-center justify-center rounded-[28px] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)]`;
 
 const BoardUnavailableState: React.FC = () => (
   <div
-    className={`${boardSurfaceShellClassName} border border-amber-200/20 bg-[radial-gradient(circle_at_top,rgba(73,35,10,0.95),rgba(18,8,3,0.98))]`}
+    className={`${boardSurfaceFallbackShellClassName} border border-amber-200/20 bg-[radial-gradient(circle_at_top,rgba(73,35,10,0.95),rgba(18,8,3,0.98))]`}
     role="status"
     aria-live="polite"
   >
@@ -36,7 +38,7 @@ const BoardRuntimeFailureState: React.FC<{ onRetry: () => void }> = ({
   onRetry,
 }) => (
   <div
-    className={`${boardSurfaceShellClassName} border border-rose-200/20 bg-[radial-gradient(circle_at_top,rgba(74,17,27,0.95),rgba(22,7,10,0.98))]`}
+    className={`${boardSurfaceFallbackShellClassName} border border-rose-200/20 bg-[radial-gradient(circle_at_top,rgba(74,17,27,0.95),rgba(22,7,10,0.98))]`}
     role="alert"
     aria-live="assertive"
   >
@@ -81,7 +83,7 @@ const BoardSurface: React.FC<BoardSurfaceProps> = ({ horses }) => {
         />
       }
     >
-      <div className={boardSurfaceShellClassName}>
+      <div className={boardSurfaceMinHeightClassName}>
         <RaceBoard3D horses={horses} />
       </div>
     </BoardRuntimeBoundary>

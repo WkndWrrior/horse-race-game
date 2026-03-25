@@ -58,6 +58,18 @@ describe("BoardSurface", () => {
     );
   });
 
+  it("does not add fallback message padding around the live 3D board", () => {
+    mockIsWebGLSupported.mockReturnValue(true);
+
+    render(<BoardSurface />);
+
+    expect(screen.getByTestId("race-board-3d").parentElement).not.toHaveClass(
+      "px-6",
+      "py-8",
+      "text-center"
+    );
+  });
+
   it("shows the unsupported state when the board runtime throws", () => {
     mockIsWebGLSupported.mockReturnValue(true);
     (globalThis as { __boardSurfaceShouldThrow?: boolean }).__boardSurfaceShouldThrow = true;
