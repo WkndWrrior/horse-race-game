@@ -64,6 +64,7 @@ const laneSpanHeight =
 const finishLineHeight = laneSpanHeight;
 const startLineHeight = laneSpanHeight;
 const finishLineSquare = 0.28;
+const BOARD_BOUNDS_MARGIN = 1.12;
 const HORSE_SCALE = 1.28;
 const lanePadding = 0.7;
 const trackShorten = 0.8;
@@ -644,7 +645,7 @@ const RaceBoard3D: React.FC<RaceBoard3DProps> = ({ horses }) => {
             far={100}
           />
           <Suspense fallback={null}>
-            <Bounds fit clip observe={false} margin={1.05}>
+            <Bounds fit clip observe={false} margin={BOARD_BOUNDS_MARGIN}>
               <BoundsFit />
               <BoardScene
                 woodTexture={woodTexture}
