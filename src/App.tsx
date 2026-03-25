@@ -2283,7 +2283,7 @@ const App: React.FC = () => {
                 <div
                   role="region"
                   aria-label="Race board"
-                  className="game-board-region flex w-full flex-1 items-stretch justify-center overflow-hidden rounded-[28px] border border-black/10 bg-[#c18c4b]/40 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+                  className="game-board-region flex w-full flex-1 items-stretch overflow-hidden rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
                 >
                   <BoardSurface horses={horses} />
                 </div>

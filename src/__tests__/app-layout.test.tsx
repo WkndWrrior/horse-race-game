@@ -61,6 +61,17 @@ describe("App layout", () => {
     ).toBeInTheDocument();
   });
 
+  it("uses the race-board wrapper as a rounded clip without a visible pad", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: /half day \(4 races\)/i }));
+
+    const boardRegion = screen.getByRole("region", { name: /race board/i });
+
+    expect(boardRegion).toHaveClass("rounded-[28px]", "overflow-hidden");
+    expect(boardRegion).not.toHaveClass("border", "bg-[#c18c4b]/40");
+  });
+
   it("uses flat dice rendering while a roll is in progress", () => {
     render(<App />);
 
