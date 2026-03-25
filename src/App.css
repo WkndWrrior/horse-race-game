@@ -171,6 +171,10 @@
   min-height: 0;
 }
 
+.board-surface-live-shell {
+  max-height: 100%;
+}
+
 .player-card-list {
   scrollbar-width: thin;
 }
@@ -216,6 +220,13 @@
 
   .trade-panel-scroll {
     max-height: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .board-surface-live-shell {
+    height: min(560px, calc(100dvh - var(--hud-h, 0px) - 1rem));
+    min-height: 280px;
   }
 }
 

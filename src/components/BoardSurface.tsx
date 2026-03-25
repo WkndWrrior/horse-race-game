@@ -8,8 +8,9 @@ interface BoardSurfaceProps {
   horses?: Horse[];
 }
 
-const boardSurfaceMinHeightClassName =
-  "h-full min-h-0 w-full sm:min-h-[420px] lg:min-h-[560px]";
+const boardSurfaceMinHeightClassName = "h-full min-h-0 w-full sm:min-h-[420px]";
+const boardSurfaceLiveShellClassName =
+  `${boardSurfaceMinHeightClassName} board-surface-live-shell`;
 const boardSurfaceFallbackShellClassName =
   `flex ${boardSurfaceMinHeightClassName} items-center justify-center rounded-[28px] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)]`;
 
@@ -83,7 +84,7 @@ const BoardSurface: React.FC<BoardSurfaceProps> = ({ horses }) => {
         />
       }
     >
-      <div className={boardSurfaceMinHeightClassName}>
+      <div className={boardSurfaceLiveShellClassName}>
         <RaceBoard3D horses={horses} />
       </div>
     </BoardRuntimeBoundary>

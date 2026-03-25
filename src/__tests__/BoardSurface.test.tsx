@@ -53,8 +53,7 @@ describe("BoardSurface", () => {
     render(<BoardSurface />);
 
     expect(screen.getByTestId("race-board-3d").parentElement).toHaveClass(
-      "sm:min-h-[420px]",
-      "lg:min-h-[560px]"
+      "sm:min-h-[420px]"
     );
   });
 
@@ -67,6 +66,19 @@ describe("BoardSurface", () => {
       "px-6",
       "py-8",
       "text-center"
+    );
+  });
+
+  it("uses a responsive live board shell instead of a fixed desktop minimum height", () => {
+    mockIsWebGLSupported.mockReturnValue(true);
+
+    render(<BoardSurface />);
+
+    expect(screen.getByTestId("race-board-3d").parentElement).toHaveClass(
+      "board-surface-live-shell"
+    );
+    expect(screen.getByTestId("race-board-3d").parentElement).not.toHaveClass(
+      "lg:min-h-[560px]"
     );
   });
 
