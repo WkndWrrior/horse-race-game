@@ -8,7 +8,7 @@ describe("RaceBoard3D layout contract", () => {
       "utf8"
     );
 
-    expect(source).toContain("const BOARD_BOUNDS_MARGIN = 1.12;");
+    expect(source).toContain("const BOARD_BOUNDS_MARGIN = 1.06;");
     expect(source).toContain("margin={BOARD_BOUNDS_MARGIN}");
   });
 });

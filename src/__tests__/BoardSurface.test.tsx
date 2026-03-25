@@ -75,7 +75,8 @@ describe("BoardSurface", () => {
     render(<BoardSurface />);
 
     expect(screen.getByTestId("race-board-3d").parentElement).toHaveClass(
-      "board-surface-live-shell"
+      "board-surface-live-shell",
+      "flex-1"
     );
     expect(screen.getByTestId("race-board-3d").parentElement).not.toHaveClass(
       "lg:min-h-[560px]"

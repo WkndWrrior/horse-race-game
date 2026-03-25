@@ -10,7 +10,7 @@ interface BoardSurfaceProps {
 
 const boardSurfaceMinHeightClassName = "h-full min-h-0 w-full sm:min-h-[420px]";
 const boardSurfaceLiveShellClassName =
-  `${boardSurfaceMinHeightClassName} board-surface-live-shell`;
+  `flex flex-1 self-stretch ${boardSurfaceMinHeightClassName} board-surface-live-shell`;
 const boardSurfaceFallbackShellClassName =
   `flex ${boardSurfaceMinHeightClassName} items-center justify-center rounded-[28px] px-6 py-8 text-center shadow-[0_32px_80px_rgba(0,0,0,0.4)]`;
 

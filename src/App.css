@@ -224,8 +224,11 @@
 }
 
 @media (min-width: 1024px) {
+  .game-board-region {
+    height: min(560px, calc(100dvh - var(--hud-h, 0px) - 1.5rem));
+  }
+
   .board-surface-live-shell {
-    height: min(540px, calc(100dvh - var(--hud-h, 0px) - 2rem));
     min-height: 280px;
   }
 }
