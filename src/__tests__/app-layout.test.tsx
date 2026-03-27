@@ -167,6 +167,10 @@ describe("App layout", () => {
     expect(css).toContain(".game-board-region {\n    min-height: clamp(96px, 17vh, 156px);");
     expect(appSource).toContain("gap-1 md:gap-3 items-stretch");
     expect(appSource).not.toContain("const gap = isMobile ? 4 : 0;");
+    expect(appSource).toContain('className="order-1 flex min-h-0 lg:order-2 lg:flex-1"');
+    expect(appSource).toContain(
+      'className="game-board-region flex w-full items-stretch overflow-hidden rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.18)] lg:flex-1"'
+    );
   });
 
   it("keeps the desktop trade overlay dialog path", () => {
