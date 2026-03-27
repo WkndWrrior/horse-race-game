@@ -1851,10 +1851,9 @@ const App: React.FC = () => {
     const updateHudHeight = () => {
       if (!appRootRef.current || !hudRef.current) return;
       const height = hudRef.current.getBoundingClientRect().height;
-      const gap = isMobile ? 4 : 0;
       appRootRef.current.style.setProperty(
         "--hud-h",
-        `${Math.ceil(height) + gap}px`
+        `${Math.ceil(height)}px`
       );
     };
 
@@ -2278,7 +2277,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="w-full flex-1 min-h-0 flex justify-center relative z-0 overflow-hidden">
-            <div className="game-layout w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 flex flex-col lg:grid lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-2 md:gap-3 items-stretch lg:items-start">
+            <div className="game-layout w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 flex flex-col lg:grid lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-1 md:gap-3 items-stretch lg:items-start">
               <div className="order-1 flex min-h-0 flex-1 lg:order-2">
                 <div
                   role="region"

@@ -195,7 +195,7 @@
   }
 
   .game-board-region {
-    min-height: clamp(108px, 20vh, 180px);
+    min-height: clamp(96px, 17vh, 156px);
   }
 
   .player-card-dock {

@@ -162,8 +162,11 @@ describe("App layout", () => {
 
   it("uses a tighter dynamic mobile board-height clamp to leave room for cards", () => {
     const css = fs.readFileSync(path.resolve(__dirname, "../App.css"), "utf8");
+    const appSource = fs.readFileSync(path.resolve(__dirname, "../App.tsx"), "utf8");
 
-    expect(css).toContain(".game-board-region {\n    min-height: clamp(108px, 20vh, 180px);");
+    expect(css).toContain(".game-board-region {\n    min-height: clamp(96px, 17vh, 156px);");
+    expect(appSource).toContain("gap-1 md:gap-3 items-stretch");
+    expect(appSource).not.toContain("const gap = isMobile ? 4 : 0;");
   });
 
   it("keeps the desktop trade overlay dialog path", () => {
