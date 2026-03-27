@@ -6,6 +6,7 @@ import isWebGLSupported from "../utils/webglSupport";
 
 interface BoardSurfaceProps {
   horses?: Horse[];
+  mobile?: boolean;
 }
 
 const boardSurfaceMinHeightClassName = "h-full min-h-0 w-full sm:min-h-[420px]";
@@ -65,7 +66,7 @@ const BoardRuntimeFailureState: React.FC<{ onRetry: () => void }> = ({
   </div>
 );
 
-const BoardSurface: React.FC<BoardSurfaceProps> = ({ horses }) => {
+const BoardSurface: React.FC<BoardSurfaceProps> = ({ horses, mobile = false }) => {
   const [isSupported] = useState(() => isWebGLSupported());
   const [runtimeResetKey, setRuntimeResetKey] = useState(0);
 
@@ -85,7 +86,7 @@ const BoardSurface: React.FC<BoardSurfaceProps> = ({ horses }) => {
       }
     >
       <div className={boardSurfaceLiveShellClassName}>
-        <RaceBoard3D horses={horses} />
+        <RaceBoard3D horses={horses} mobile={mobile} />
       </div>
     </BoardRuntimeBoundary>
   );

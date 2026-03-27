@@ -2284,7 +2284,7 @@ const App: React.FC = () => {
                   aria-label="Race board"
                   className="game-board-region flex w-full items-stretch overflow-hidden rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.18)] lg:flex-1"
                 >
-                  <BoardSurface horses={horses} />
+                  <BoardSurface horses={horses} mobile={isMobile} />
                 </div>
               </div>
 

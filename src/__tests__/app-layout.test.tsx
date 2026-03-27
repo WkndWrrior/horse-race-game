@@ -164,7 +164,7 @@ describe("App layout", () => {
     const css = fs.readFileSync(path.resolve(__dirname, "../App.css"), "utf8");
     const appSource = fs.readFileSync(path.resolve(__dirname, "../App.tsx"), "utf8");
 
-    expect(css).toContain(".game-board-region {\n    min-height: clamp(96px, 17vh, 156px);");
+    expect(css).toContain(".game-board-region {\n    min-height: clamp(144px, 26vh, 228px);");
     expect(appSource).toContain("gap-1 md:gap-3 items-stretch");
     expect(appSource).not.toContain("const gap = isMobile ? 4 : 0;");
     expect(appSource).toContain('className="order-1 flex min-h-0 lg:order-2 lg:flex-1"');

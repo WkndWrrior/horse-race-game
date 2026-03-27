@@ -6,6 +6,7 @@ import { Horse } from "../types";
 
 interface RaceBoard3DProps {
   horses?: Horse[];
+  mobile?: boolean;
 }
 
 interface LaneConfig {
@@ -64,7 +65,10 @@ const laneSpanHeight =
 const finishLineHeight = laneSpanHeight;
 const startLineHeight = laneSpanHeight;
 const finishLineSquare = 0.28;
-const BOARD_BOUNDS_MARGIN = 1.01;
+const MOBILE_BOARD_BOUNDS_MARGIN = 0.96;
+const DESKTOP_BOARD_BOUNDS_MARGIN = 1.01;
+const MOBILE_BOARD_X_SCALE = 1;
+const DESKTOP_BOARD_X_SCALE = 0.95;
 const HORSE_SCALE = 1.28;
 const lanePadding = 0.7;
 const trackShorten = 0.8;
@@ -365,7 +369,7 @@ const BoardScene: React.FC<{
   ];
 
   return (
-  <group scale={[0.95, 1, 1]}>
+  <group scale={[showLaneNumbers ? MOBILE_BOARD_X_SCALE : DESKTOP_BOARD_X_SCALE, 1, 1]}>
     {/* Rounded rectangle base */}
     <mesh
       position={[0, -boardThickness / 2, 0]}
@@ -593,9 +597,10 @@ const BoundsFit: React.FC = () => {
   return null;
 };
 
-const RaceBoard3D: React.FC<RaceBoard3DProps> = ({ horses }) => {
+const RaceBoard3D: React.FC<RaceBoard3DProps> = ({ horses, mobile = false }) => {
   const woodTexture = useMemo(() => createWoodTexture(), []);
   const laneConfigs = useMemo(() => generateLaneConfigs(), []);
+  const isMobileViewport = mobile;
 
   useEffect(() => () => woodTexture.dispose(), [woodTexture]);
 
@@ -644,7 +649,12 @@ const RaceBoard3D: React.FC<RaceBoard3DProps> = ({ horses }) => {
             far={100}
           />
           <Suspense fallback={null}>
-            <Bounds fit clip observe={false} margin={BOARD_BOUNDS_MARGIN}>
+                <Bounds
+                  fit
+                  clip
+                  observe={false}
+                  margin={isMobileViewport ? MOBILE_BOARD_BOUNDS_MARGIN : DESKTOP_BOARD_BOUNDS_MARGIN}
+                >
               <BoundsFit />
               <BoardScene
                 woodTexture={woodTexture}
