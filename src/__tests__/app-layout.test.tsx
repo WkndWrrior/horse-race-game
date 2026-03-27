@@ -1,5 +1,7 @@
 import React from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import fs from "fs";
+import path from "path";
 import App from "../App";
 
 jest.mock("../components/BoardSurface", () => ({
@@ -156,6 +158,12 @@ describe("App layout", () => {
         { name: /start race/i }
       )
     ).toBeInTheDocument();
+  });
+
+  it("uses a tighter dynamic mobile board-height clamp to leave room for cards", () => {
+    const css = fs.readFileSync(path.resolve(__dirname, "../App.css"), "utf8");
+
+    expect(css).toContain(".game-board-region {\n    min-height: clamp(108px, 20vh, 180px);");
   });
 
   it("keeps the desktop trade overlay dialog path", () => {
