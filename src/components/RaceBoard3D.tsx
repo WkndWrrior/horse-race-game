@@ -64,7 +64,7 @@ const laneSpanHeight =
 const finishLineHeight = laneSpanHeight;
 const startLineHeight = laneSpanHeight;
 const finishLineSquare = 0.28;
-const BOARD_BOUNDS_MARGIN = 1.06;
+const BOARD_BOUNDS_MARGIN = 1.01;
 const HORSE_SCALE = 1.28;
 const lanePadding = 0.7;
 const trackShorten = 0.8;
@@ -617,7 +617,6 @@ const RaceBoard3D: React.FC<RaceBoard3DProps> = ({ horses }) => {
       <div
         className="w-full h-full"
         style={{
-          maxWidth: "min(100%, 1600px)",
           maxHeight: "var(--board-max-height, 100%)",
           overflow: "hidden",
         }}
