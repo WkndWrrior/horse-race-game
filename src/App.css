@@ -199,7 +199,7 @@
   }
 
   .mobile-board-slot {
-    margin-top: clamp(0.875rem, 3vh, 1rem);
+    margin-top: calc(clamp(0.875rem, 3vh, 1rem) + 15px);
   }
 
   .game-board-region {
@@ -247,7 +247,7 @@
   }
 
   .mobile-board-slot {
-    margin-top: clamp(0.625rem, 2.2vh, 0.75rem);
+    margin-top: calc(clamp(0.625rem, 2.2vh, 0.75rem) + 15px);
   }
 
   .player-card-dock {
