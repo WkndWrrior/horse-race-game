@@ -160,14 +160,16 @@ describe("App layout", () => {
     ).toBeInTheDocument();
   });
 
-  it("uses a tighter dynamic mobile board-height clamp to leave room for cards", () => {
+  it("uses a slightly smaller mobile board slot with larger mobile-only board gaps", () => {
     const css = fs.readFileSync(path.resolve(__dirname, "../App.css"), "utf8");
     const appSource = fs.readFileSync(path.resolve(__dirname, "../App.tsx"), "utf8");
 
-    expect(css).toContain(".game-board-region {\n    min-height: clamp(144px, 26vh, 228px);");
-    expect(appSource).toContain("gap-1 md:gap-3 items-stretch");
+    expect(css).toContain(".game-board-region {\n    min-height: clamp(136px, 24vh, 212px);");
+    expect(css).toContain(".mobile-board-stack {\n    gap: clamp(0.75rem, 2.5vh, 0.9rem);");
+    expect(css).toContain(".mobile-board-slot {\n    margin-top: clamp(0.875rem, 3vh, 1rem);");
     expect(appSource).not.toContain("const gap = isMobile ? 4 : 0;");
-    expect(appSource).toContain('className="order-1 flex min-h-0 lg:order-2 lg:flex-1"');
+    expect(appSource).toContain('className="game-layout mobile-board-stack w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 flex flex-col lg:grid lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-1 md:gap-3 items-stretch lg:items-start"');
+    expect(appSource).toContain('className="mobile-board-slot order-1 flex min-h-0 lg:order-2 lg:flex-1"');
     expect(appSource).toContain(
       'className="game-board-region flex w-full items-stretch overflow-hidden rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.18)] lg:flex-1"'
     );

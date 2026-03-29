@@ -194,8 +194,16 @@
     min-height: 44px;
   }
 
+  .mobile-board-stack {
+    gap: clamp(0.75rem, 2.5vh, 0.9rem);
+  }
+
+  .mobile-board-slot {
+    margin-top: clamp(0.875rem, 3vh, 1rem);
+  }
+
   .game-board-region {
-    min-height: clamp(144px, 26vh, 228px);
+    min-height: clamp(136px, 24vh, 212px);
   }
 
   .player-card-dock {
@@ -234,8 +242,12 @@
 }
 
 @media (max-width: 768px) and (max-height: 720px) {
-  .game-layout {
-    gap: 0.5rem;
+  .mobile-board-stack {
+    gap: clamp(0.625rem, 2vh, 0.75rem);
+  }
+
+  .mobile-board-slot {
+    margin-top: clamp(0.625rem, 2.2vh, 0.75rem);
   }
 
   .player-card-dock {

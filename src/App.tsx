@@ -2277,8 +2277,8 @@ const App: React.FC = () => {
           </div>
 
           <div className="w-full flex-1 min-h-0 flex justify-center relative z-0 overflow-hidden">
-            <div className="game-layout w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 flex flex-col lg:grid lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-1 md:gap-3 items-stretch lg:items-start">
-              <div className="order-1 flex min-h-0 lg:order-2 lg:flex-1">
+            <div className="game-layout mobile-board-stack w-full h-full min-h-0 px-0 sm:px-3 lg:px-4 flex flex-col lg:grid lg:grid-cols-[180px_minmax(0,1fr)_180px] gap-1 md:gap-3 items-stretch lg:items-start">
+              <div className="mobile-board-slot order-1 flex min-h-0 lg:order-2 lg:flex-1">
                 <div
                   role="region"
                   aria-label="Race board"
