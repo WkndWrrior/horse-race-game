@@ -1554,7 +1554,7 @@ const App: React.FC = () => {
   const userSellsLeft = isUserEliminated
     ? 0
     : Math.max(MAX_TRADES_PER_PLAYER - (userSellCount + userActiveListings), 0);
-  const showMobileTradePanel = isMobile && phase === "trade" && showTradeModal;
+  const showTradeOverlay = phase === "trade" && showTradeModal;
   const renderCards = (cards: Card[]) =>
     sortCardsByValue(cards).map((card, idx) => (
       <div
@@ -1572,12 +1572,9 @@ const App: React.FC = () => {
     ));
   const renderTradePanel = (mobile: boolean) => (
     <div
-      role={mobile ? "dialog" : undefined}
-      aria-modal={mobile ? "false" : undefined}
-      aria-label={mobile ? "Trading Window" : undefined}
       className={
         mobile
-          ? "mobile-trade-panel flex w-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#f4e7cd] text-green-900 shadow-2xl border border-green-900/20 px-4 py-4"
+          ? "mobile-trade-panel flex h-full w-full max-h-none flex-col overflow-hidden bg-[#f4e7cd] text-green-900 px-4 py-4"
           : "flex w-full max-w-[920px] flex-col rounded-2xl bg-[#f4e7cd] text-green-900 shadow-2xl border border-green-900/20 px-6 py-6"
       }
     >
@@ -2313,16 +2310,6 @@ const App: React.FC = () => {
                       </div>
                     )}
                   </div>
-
-                  {showMobileTradePanel && (
-                    <section
-                      aria-label="Trading controls"
-                      className="flex min-h-0 flex-1 lg:hidden"
-                    >
-                      {renderTradePanel(true)}
-                    </section>
-                  )}
-
                   {leftPlayers.map((player) => (
                     <div
                       key={player.id}
@@ -2409,14 +2396,18 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {phase === "trade" && showTradeModal && !showMobileTradePanel && (
+          {showTradeOverlay && (
             <div
-              className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+              className={
+                isMobile
+                  ? "fixed inset-0 z-[80] flex items-stretch justify-center bg-black/40 backdrop-blur-sm"
+                  : "fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+              }
               role="dialog"
               aria-modal="true"
               aria-label="Trading Window"
             >
-              {renderTradePanel(false)}
+              {renderTradePanel(isMobile)}
             </div>
           )}
 

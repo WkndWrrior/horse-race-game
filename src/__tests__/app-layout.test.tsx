@@ -103,7 +103,7 @@ describe("App layout", () => {
     expect(dicePanel).not.toHaveClass("opacity-60");
   });
 
-  it("keeps the board and player card dock mounted in mobile trade mode", () => {
+  it("uses a modal trade overlay in mobile trade mode", () => {
     window.innerWidth = 390;
     window.innerHeight = 560;
     window.dispatchEvent(new Event("resize"));
@@ -144,20 +144,14 @@ describe("App layout", () => {
       screen.getByRole("region", { name: /player card dock/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("region", { name: /trading controls/i })
-    ).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("region", { name: /trading controls/i })).getByRole(
-        "dialog",
-        { name: /trading window/i }
-      )
-    ).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("region", { name: /trading controls/i })).getByRole(
-        "button",
-        { name: /start race/i }
-      )
-    ).toBeInTheDocument();
+      screen.queryByRole("region", { name: /trading controls/i })
+    ).not.toBeInTheDocument();
+
+    const tradeDialog = screen.getByRole("dialog", { name: /trading window/i });
+
+    expect(tradeDialog).toBeInTheDocument();
+    expect(tradeDialog).toHaveAttribute("aria-modal", "true");
+    expect(within(tradeDialog).getByRole("button", { name: /start race/i })).toBeInTheDocument();
   });
 
   it("keeps the mobile board stack 15px lower while preserving the larger board", () => {

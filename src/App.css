@@ -223,7 +223,8 @@
   }
 
   .mobile-trade-panel {
-    max-height: min(26vh, 14rem);
+    height: 100%;
+    max-height: none;
   }
 
   .trade-panel-scroll {
@@ -255,7 +256,8 @@
   }
 
   .mobile-trade-panel {
-    max-height: min(24vh, 12rem);
+    height: 100%;
+    max-height: none;
   }
 }
 
