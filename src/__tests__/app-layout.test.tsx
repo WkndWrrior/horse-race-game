@@ -116,7 +116,7 @@ describe("App layout", () => {
       'const pegDotClassName =\n  "h-2.5 w-2.5 rounded-full bg-[#140c09] shadow-[0_1px_0_rgba(255,255,255,0.08)] sm:h-[1.22rem] sm:w-[1.22rem]"'
     );
     expect(tutorialSource).toContain(
-      'className="right-[1%] top-[56%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[72%] top-full"'
+      'className="right-[2%] top-[60%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[66%] top-full"'
     );
     expect(tutorialSource).toContain(
       'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
@@ -133,7 +133,10 @@ describe("App layout", () => {
     );
 
     expect(tutorialSource).toContain(
-      'className="left-[2%] top-[18%] sm:left-[4%] sm:top-[21%]" pinClassName="left-10 top-full"'
+      'className="left-[3%] top-[20%] sm:left-[4%] sm:top-[21%]" pinClassName="left-8 top-full"'
+    );
+    expect(tutorialSource).toContain(
+      'className="right-[2%] top-[7%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[26%] top-full"'
     );
     expect(tutorialSource).toContain(
       'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
@@ -141,7 +144,7 @@ describe("App layout", () => {
     expect(tutorialSource).not.toContain("const hidden =");
     expect(tutorialSource).not.toContain('hidden ? "opacity-0" : ""');
     expect(tutorialSource).toContain(
-      'className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
+      'className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
     );
   });
 
@@ -181,7 +184,7 @@ describe("App layout", () => {
       'const scratchColumnGridClassName = "grid grid-cols-4 justify-items-center gap-2 sm:gap-3";'
     );
     expect(tutorialSource).toContain(
-      'className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
+      'className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
     );
     expect(tutorialSource).not.toContain(
       'className="mt-4 grid grid-cols-4 gap-1 text-center text-[11px] font-black text-[#f7e6c4] sm:mt-5 sm:gap-2 sm:text-[1.1rem]"'

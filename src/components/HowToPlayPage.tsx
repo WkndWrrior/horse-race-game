@@ -92,32 +92,32 @@ const HowToPlayPage: React.FC = () => (
 
       <section
         aria-label="How to play tutorial board"
-        className="relative overflow-hidden rounded-[40px] bg-[#ead9b8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:p-6"
+        className="relative overflow-hidden rounded-[40px] bg-[#ead9b8] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:p-6"
       >
-        <Callout className="left-[2%] top-[18%] sm:left-[4%] sm:top-[21%]" pinClassName="left-10 top-full">
+        <Callout className="left-[3%] top-[20%] sm:left-[4%] sm:top-[21%]" pinClassName="left-8 top-full">
           Scratch 4 horses and avoid their penalty lines
         </Callout>
-        <Callout className="right-[6%] top-[3%] sm:right-[8%] sm:top-[6%]" pinClassName="left-10 top-full">
+        <Callout className="right-[2%] top-[7%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[26%] top-full">
           Roll the dice and move the matching horse
         </Callout>
-        <Callout className="right-[1%] top-[56%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[72%] top-full">
+        <Callout className="right-[2%] top-[60%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[66%] top-full">
           Cheer for the horses that match your cards
         </Callout>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.22fr)_minmax(320px,0.78fr)]">
-          <div className="grid gap-4">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.22fr)_minmax(320px,0.78fr)] sm:gap-4">
+          <div className="grid gap-3 sm:gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[26px] border border-[#86a77d] bg-[#4e7b4f] px-6 py-4 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)]">
+              <div className="rounded-[22px] border border-[#86a77d] bg-[#4e7b4f] px-4 py-3 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)] sm:rounded-[26px] sm:px-6 sm:py-4">
                 <p className="text-sm font-black uppercase tracking-[0.14em]">Current Player</p>
                 <p className="mt-4 text-2xl font-black sm:text-3xl">You</p>
               </div>
-              <div className="rounded-[26px] border border-[#86a77d] bg-[#4e7b4f] px-6 py-4 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)]">
+              <div className="rounded-[22px] border border-[#86a77d] bg-[#4e7b4f] px-4 py-3 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)] sm:rounded-[26px] sm:px-6 sm:py-4">
                 <p className="text-sm font-black uppercase tracking-[0.14em]">Pot</p>
                 <p className="mt-4 text-2xl font-black sm:text-3xl">$225.00</p>
               </div>
             </div>
 
-            <div className="rounded-[26px] border border-[#86a77d] bg-[#7d986e] px-6 py-4 text-[#f7f1d7] shadow-[0_14px_30px_rgba(64,94,58,0.2)]">
+            <div className="rounded-[22px] border border-[#86a77d] bg-[#7d986e] px-4 py-3 text-[#f7f1d7] shadow-[0_14px_30px_rgba(64,94,58,0.2)] sm:rounded-[26px] sm:px-6 sm:py-4">
               <p className="text-sm font-black uppercase tracking-[0.14em]">Scratched Horses</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 {scratchChips.map((chip) => (
@@ -132,19 +132,19 @@ const HowToPlayPage: React.FC = () => (
             </div>
           </div>
 
-          <aside className="rounded-[30px] border border-[#86a77d] bg-[#4e7b4f] px-6 py-4 text-[#f7f1d7] shadow-[0_18px_34px_rgba(51,98,57,0.24)]">
+          <aside className="rounded-[24px] border border-[#86a77d] bg-[#4e7b4f] px-4 py-3 text-[#f7f1d7] shadow-[0_18px_34px_rgba(51,98,57,0.24)] sm:rounded-[30px] sm:px-6 sm:py-4">
             <p className="text-sm uppercase tracking-[0.4em] text-[#d9e3ca]">Roll Total</p>
             <p className="mt-4 text-2xl font-black sm:text-3xl">5</p>
-            <div className="mt-8 flex justify-center gap-6">
+            <div className="mt-5 flex justify-center gap-4 sm:mt-8 sm:gap-6">
               <DiceFace value={3} />
               <DiceFace value={2} />
             </div>
-            <p className="mt-8 text-lg text-[#d6ddcb]">Click to roll the dice</p>
+            <p className="mt-5 text-base text-[#d6ddcb] sm:mt-8 sm:text-lg">Click to roll the dice</p>
           </aside>
         </div>
 
-        <div className="mt-6 rounded-[40px] bg-[#e6d7b7] p-4 sm:p-6">
-          <div className="rounded-[34px] bg-[linear-gradient(90deg,#8d4f10_0%,#9a5b14_8%,#7d430d_14%,#99611d_22%,#80450f_29%,#8e5515_38%,#7a410e_46%,#93571a_54%,#7e4711_62%,#925717_70%,#7d450f_78%,#9a601b_86%,#7f450f_93%,#8a5015_100%)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_18px_32px_rgba(114,68,13,0.18)] sm:p-6">
+        <div className="mt-5 rounded-[34px] bg-[#e6d7b7] p-3 sm:mt-6 sm:rounded-[40px] sm:p-6">
+          <div className="rounded-[28px] bg-[linear-gradient(90deg,#8d4f10_0%,#9a5b14_8%,#7d430d_14%,#99611d_22%,#80450f_29%,#8e5515_38%,#7a410e_46%,#93571a_54%,#7e4711_62%,#925717_70%,#7d450f_78%,#9a601b_86%,#7f450f_93%,#8a5015_100%)] p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_18px_32px_rgba(114,68,13,0.18)] sm:rounded-[34px] sm:p-6">
             <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]">
               <div className="rounded-l-[24px] bg-[linear-gradient(90deg,#8f5314_0%,#9e621b_18%,#82440e_28%,#a1661f_41%,#7c410d_53%,#9d6320_69%,#824710_82%,#9b5f1c_100%)] px-2 py-3 sm:px-4 sm:py-4">
                 <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#f7f1d7] sm:text-[1.5rem] sm:tracking-[0.09em] sm:leading-none">
@@ -172,7 +172,7 @@ const HowToPlayPage: React.FC = () => (
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3">
+                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3">
                       <div
                         className={`${scratchColumnGridClassName} pr-1 text-center text-[10px] font-black text-[#f7e6c4] sm:pr-2 sm:text-[1rem]`}
                       >
