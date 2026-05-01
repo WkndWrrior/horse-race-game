@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import BoardSurface from "./components/BoardSurface";
+import HowToPlayPage from "./components/HowToPlayPage";
 import { Horse } from "./types";
 import useViewportMode from "./hooks/useViewportMode";
 import useTotalEliminationGuard from "./hooks/useTotalEliminationGuard";
@@ -178,6 +179,53 @@ const PLAYER_NAMES = [
   "Diane Diamond",
   "Longshot Liz",
 ];
+const SITE_URL = "https://horseracegame.vercel.app";
+const HOW_TO_PLAY_ROUTE = "/how-to-play";
+type AppRoute = "/" | typeof HOW_TO_PLAY_ROUTE;
+const PAGE_METADATA = {
+  "/": {
+    title: "Horse Race Game – Play a Virtual Horse Racing Board Game",
+    description:
+      "Play Horse Race Game, a virtual horse racing board game with dice rolls, trading, and race-day strategy. Compete across multiple races and track your winnings.",
+    url: SITE_URL,
+  },
+  [HOW_TO_PLAY_ROUTE]: {
+    title: "How To Play Horse Race Game | Tutorial",
+    description:
+      "Learn the goal of Horse Race Game, how races flow from scratches to trading and payouts, and what to watch for when backing your cards.",
+    url: `${SITE_URL}${HOW_TO_PLAY_ROUTE}`,
+  },
+} as const;
+const normalizePathname = (pathname: string): AppRoute =>
+  pathname === HOW_TO_PLAY_ROUTE ? HOW_TO_PLAY_ROUTE : "/";
+const upsertMeta = (
+  selector: string,
+  attributes: Record<string, string>,
+  content: string
+) => {
+  if (typeof document === "undefined") return;
+  let element = document.head.querySelector(selector) as HTMLMetaElement | null;
+  if (!element) {
+    element = document.createElement("meta");
+    Object.entries(attributes).forEach(([key, value]) => {
+      element?.setAttribute(key, value);
+    });
+    document.head.appendChild(element);
+  }
+  element.setAttribute("content", content);
+};
+const upsertCanonical = (href: string) => {
+  if (typeof document === "undefined") return;
+  let element = document.head.querySelector(
+    'link[rel="canonical"]'
+  ) as HTMLLinkElement | null;
+  if (!element) {
+    element = document.createElement("link");
+    element.setAttribute("rel", "canonical");
+    document.head.appendChild(element);
+  }
+  element.setAttribute("href", href);
+};
 const coerceStat = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) ? value : 0;
 
@@ -306,6 +354,9 @@ const sortCardsByValue = (cards: Card[]) =>
   [...cards].sort((a, b) => a.value - b.value);
 
 const App: React.FC = () => {
+  const [pathname, setPathname] = useState<AppRoute>(() =>
+    typeof window === "undefined" ? "/" : normalizePathname(window.location.pathname)
+  );
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameMode, setGameMode] = useState<"half" | "full" | null>(null);
@@ -335,9 +386,6 @@ const App: React.FC = () => {
   const [tradeSellCounts, setTradeSellCounts] = useState<Record<number, number>>({});
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [tradeTab, setTradeTab] = useState<"buy" | "sell">("buy");
-  const [openHomePanel, setOpenHomePanel] = useState<"stats" | "rules" | null>(
-    null
-  );
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => {
     const storedEnvelope = safeReadStatsEnvelope<unknown>(STATS_STORAGE_KEY, null);
     if (storedEnvelope !== null) {
@@ -381,6 +429,41 @@ const App: React.FC = () => {
   const [pot, setPot] = useState(0);
   const [scratchHistory, setScratchHistory] = useState<number[]>([]);
   const [winner, setWinner] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePopState = () => {
+      setPathname(normalizePathname(window.location.pathname));
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const meta = PAGE_METADATA[pathname];
+    document.title = meta.title;
+    upsertMeta('meta[name="description"]', { name: "description" }, meta.description);
+    upsertMeta('meta[property="og:title"]', { property: "og:title" }, meta.title);
+    upsertMeta(
+      'meta[property="og:description"]',
+      { property: "og:description" },
+      meta.description
+    );
+    upsertMeta('meta[property="og:url"]', { property: "og:url" }, meta.url);
+    upsertMeta('meta[name="twitter:title"]', { name: "twitter:title" }, meta.title);
+    upsertMeta(
+      'meta[name="twitter:description"]',
+      { name: "twitter:description" },
+      meta.description
+    );
+    upsertCanonical(meta.url);
+  }, [pathname]);
 
   const getAudioContext = () => {
     if (typeof window === "undefined") return null;
@@ -1542,6 +1625,9 @@ const App: React.FC = () => {
       })),
     [confettiSeed]
   );
+
+  const isHowToPlayRoute = pathname === HOW_TO_PLAY_ROUTE;
+
   const isUserEliminated = !!userPlayer?.eliminated;
   const userBuyCount = tradeBuyCounts[userPlayer?.id ?? 1] ?? 0;
   const userSellCount = tradeSellCounts[userPlayer?.id ?? 1] ?? 0;
@@ -1819,6 +1905,14 @@ const App: React.FC = () => {
     setPlayerStats(EMPTY_STATS);
   }, []);
 
+  const scrollToHomeSection = useCallback((sectionId: string) => {
+    if (typeof document === "undefined") return;
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, []);
+
   useEffect(() => {
     if (phase === "trade" && showTradeModal) {
       setTradeTab(isMobile ? "sell" : "buy");
@@ -1953,15 +2047,18 @@ const App: React.FC = () => {
     }, 10000);
   }, [raceSummary, currentRace, totalRaces]);
 
+  if (isHowToPlayRoute) {
+    return <HowToPlayPage />;
+  }
+
   return (
     <div
       ref={appRootRef}
       style={
         {
           "--hud-h": "144px",
-          overflowY: !gameStarted && openHomePanel && isMobile ? "auto" : "hidden",
-          WebkitOverflowScrolling:
-            !gameStarted && openHomePanel && isMobile ? "touch" : undefined,
+          overflowY: !gameStarted ? "auto" : "hidden",
+          WebkitOverflowScrolling: !gameStarted ? "touch" : undefined,
         } as React.CSSProperties
       }
       className={`relative flex flex-col items-center h-[100dvh] min-h-[100vh] overflow-hidden text-white ${
@@ -1971,11 +2068,6 @@ const App: React.FC = () => {
       {!gameStarted ? (
         <div
           className="w-full flex flex-col text-center"
-          style={
-            !gameStarted && openHomePanel && isMobile
-              ? { paddingBottom: "48px" }
-              : undefined
-          }
         >
           <div
             className="w-full py-3 flex justify-center"
@@ -1991,137 +2083,158 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="w-full flex-1 flex flex-col items-center justify-center gap-6 px-4 pb-6 pt-8 sm:pt-12">
-            <div className="w-full max-w-4xl rounded-[28px] bg-[#c59653]/90 text-[#3a2212] px-6 sm:px-12 py-7 sm:py-10 shadow-2xl border border-[#8b5a2b]/50">
-              <div className="flex flex-col items-center gap-2">
-                <div className="h-px w-40 bg-[#8b5a2b]/40" />
-                <h2
-                  className="text-2xl sm:text-[2.125rem] font-extrabold uppercase text-red-700"
-                  style={{
-                    letterSpacing: "0.38em",
-                    textShadow: "0 2px 6px rgba(234,88,12,0.35)",
-                  }}
-                >
-                  START GAME
-                </h2>
-                <div className="h-px w-40 bg-[#8b5a2b]/40" />
+          <div className="w-full flex flex-col items-center px-4 pt-8 sm:pt-12">
+            <div className="w-full max-w-5xl min-h-[calc(100dvh-5.75rem)] flex flex-col">
+              <div className="flex flex-1 items-center">
+                <div className="w-full max-w-4xl mx-auto rounded-[28px] bg-[#c59653]/90 text-[#3a2212] px-6 sm:px-12 py-7 sm:py-10 shadow-2xl border border-[#8b5a2b]/50">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-px w-40 bg-[#8b5a2b]/40" />
+                    <h2
+                      className="text-2xl sm:text-[2.125rem] font-extrabold uppercase text-red-700"
+                      style={{
+                        letterSpacing: "0.38em",
+                        textShadow: "0 2px 6px rgba(234,88,12,0.35)",
+                      }}
+                    >
+                      START GAME
+                    </h2>
+                    <div className="h-px w-40 bg-[#8b5a2b]/40" />
+                  </div>
+                  <div className="mt-6 sm:mt-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <button
+                      onClick={() => startGame("half")}
+                      className="bg-yellow-500 hover:bg-yellow-600 px-7 py-4 sm:px-9 sm:py-6 rounded-2xl text-black font-bold text-lg sm:text-xl shadow-md"
+                    >
+                      <span className="block">Half Day (4 Races)</span>
+                      <span className="block text-sm sm:text-base font-semibold text-black/70 mt-1">
+                        5–10 minutes
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => startGame("full")}
+                      className="bg-yellow-500 hover:bg-yellow-600 px-7 py-4 sm:px-9 sm:py-6 rounded-2xl text-black font-bold text-lg sm:text-xl shadow-md"
+                    >
+                      <span className="block">Full Day (8 Races)</span>
+                      <span className="block text-sm sm:text-base font-semibold text-black/70 mt-1">
+                        15–20 minutes
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="mt-6 sm:mt-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <button
-                  onClick={() => startGame("half")}
-                  className="bg-yellow-500 hover:bg-yellow-600 px-7 py-4 sm:px-9 sm:py-6 rounded-2xl text-black font-bold text-lg sm:text-xl shadow-md"
+
+              <div className="grid grid-cols-1 gap-3 pb-3 sm:gap-4 sm:pb-4 md:grid-cols-2 md:gap-5">
+                <a
+                  href="#player-stats-section"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    scrollToHomeSection("player-stats-section");
+                  }}
+                  className="order-2 md:order-1 rounded-[18px] bg-[#c59653]/85 px-4 py-2.5 text-center text-xs font-black uppercase tracking-[0.16em] text-[#3a2212] shadow-lg border border-[#8b5a2b]/40 transition hover:bg-[#c59653] sm:px-5 sm:py-3 sm:text-sm"
                 >
-                  <span className="block">Half Day (4 Races)</span>
-                  <span className="block text-sm sm:text-base font-semibold text-black/70 mt-1">
-                    5–10 minutes
-                  </span>
-                </button>
-                <button
-                  onClick={() => startGame("full")}
-                  className="bg-yellow-500 hover:bg-yellow-600 px-7 py-4 sm:px-9 sm:py-6 rounded-2xl text-black font-bold text-lg sm:text-xl shadow-md"
+                  Player Stats
+                </a>
+                <a
+                  href="#rules-section"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    scrollToHomeSection("rules-section");
+                  }}
+                  className="order-1 md:order-2 rounded-[18px] bg-[#d1a55b]/85 px-4 py-2.5 text-center text-xs font-black uppercase tracking-[0.16em] text-[#3a2212] shadow-lg border border-[#8b5a2b]/40 transition hover:bg-[#d1a55b] sm:px-5 sm:py-3 sm:text-sm"
                 >
-                  <span className="block">Full Day (8 Races)</span>
-                  <span className="block text-sm sm:text-base font-semibold text-black/70 mt-1">
-                    15–20 minutes
-                  </span>
-                </button>
+                  Rules
+                </a>
               </div>
             </div>
 
-            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              <div className="rounded-2xl bg-[#c59653]/85 text-[#3a2212] px-5 py-3 text-left shadow-lg border border-[#8b5a2b]/40 self-start">
-                <button
-                  type="button"
-                  className="w-full text-left text-sm font-bold uppercase tracking-wide"
-                  aria-expanded={openHomePanel === "stats"}
-                  onClick={() =>
-                    setOpenHomePanel((prev) => (prev === "stats" ? null : "stats"))
-                  }
-                >
-                  Player Stats
-                </button>
-                {openHomePanel === "stats" && (
-                  <div className="mt-3 space-y-3 text-sm font-semibold">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
-                        <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
-                          Half Day
-                        </p>
-                        <p>Wins: {playerStats.half.wins}</p>
-                        <p>Highest Finish: ${playerStats.half.bestBalance.toFixed(2)}</p>
-                      </div>
-                      <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
-                        <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
-                          Full Day
-                        </p>
-                        <p>Wins: {playerStats.full.wins}</p>
-                        <p>Highest Finish: ${playerStats.full.bestBalance.toFixed(2)}</p>
-                      </div>
+            <div className="mt-5 w-full max-w-5xl grid grid-cols-1 items-start gap-5 pb-10 md:grid-cols-2 md:gap-6">
+              <section
+                id="player-stats-section"
+                className="order-2 scroll-mt-4 rounded-[28px] bg-[#c59653]/85 px-5 py-4 text-left text-[#3a2212] shadow-lg border border-[#8b5a2b]/40 sm:scroll-mt-6 md:order-1"
+              >
+                <div className="mb-4 rounded-2xl bg-white/20 px-4 py-3">
+                  <h3 className="text-lg font-black uppercase tracking-wide">Player Stats</h3>
+                </div>
+                <div className="space-y-3 text-sm font-semibold">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
+                      <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
+                        Half Day
+                      </p>
+                      <p>Wins: {playerStats.half.wins}</p>
+                      <p>Highest Finish: ${playerStats.half.bestBalance.toFixed(2)}</p>
                     </div>
-                    <button
-                      type="button"
-                      className="rounded-full border border-[#8b5a2b]/30 bg-white/55 px-3 py-1.5 text-xs uppercase tracking-wide text-[#6b4b2a] transition hover:bg-white/70"
-                      onClick={resetPlayerStats}
-                    >
-                      Reset Stats
-                    </button>
+                    <div className="rounded-xl bg-white/40 px-3 py-2 border border-[#8b5a2b]/20">
+                      <p className="text-xs uppercase tracking-wide text-[#6b4b2a]">
+                        Full Day
+                      </p>
+                      <p>Wins: {playerStats.full.wins}</p>
+                      <p>Highest Finish: ${playerStats.full.bestBalance.toFixed(2)}</p>
+                    </div>
                   </div>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    className="rounded-full border border-[#8b5a2b]/30 bg-white/55 px-3 py-1.5 text-xs uppercase tracking-wide text-[#6b4b2a] transition hover:bg-white/70"
+                    onClick={resetPlayerStats}
+                  >
+                    Reset Stats
+                  </button>
+                </div>
+              </section>
 
-              <div className="rounded-2xl bg-[#d1a55b]/85 text-[#3a2212] px-5 py-3 text-left shadow-lg border border-[#8b5a2b]/40 self-start">
-                <button
-                  type="button"
-                  className="w-full text-left text-sm font-bold uppercase tracking-wide"
-                  aria-expanded={openHomePanel === "rules"}
-                  onClick={() =>
-                    setOpenHomePanel((prev) => (prev === "rules" ? null : "rules"))
-                  }
-                >
-                  Rules
-                </button>
-                {openHomePanel === "rules" && (
-                  <div className="mt-3 space-y-1.5 text-sm md:max-h-[320px] md:overflow-auto md:pr-1">
-                    <p>
-                      1) Setup: 6 players. Each race, everyone is dealt cards from the
-                      2-12 deck (four suits).
-                    </p>
-                    <p>
-                      2) Scratch phase: Roll to scratch 4 horses. Penalties are $5,
-                      $10, $15, $20 in order. Anyone holding the scratched horse pays
-                      the penalty per card. Rolling a scratched horse again charges
-                      the roller the same penalty and adds it to the pot.
-                    </p>
-                    <p>
-                      3) Trading window: After scratches, a market opens for 35
-                      seconds. Any player can list a card for $30. Any player can buy
-                      any listed card for $30. Each player can buy up to 2 cards and
-                      sell up to 2 cards per race. Unsold cards return to their owner
-                      when trading closes.
-                    </p>
-                    <p>
-                      4) Race phase: Each roll moves the matching horse forward one
-                      peg hole. If you roll a scratched horse, you pay its penalty.
-                      The horse must hit every peg hole before moving to the winners
-                      peg.
-                    </p>
-                    <p>
-                      5) Pot and payouts: All penalties go into the pot. When a horse
-                      wins, the pot is split evenly across winning cards.
-                    </p>
-                    <p>
-                      6) Bailout and elimination: Each player can get a one-time
-                      bailout when they hit $0 or below ($100 half day, $200 full
-                      day). If they are still at $0 or below after that, they are
-                      eliminated, lose their cards, and are last in the rankings.
-                    </p>
-                    <p>
-                      7) Turns: Player 1 (you) rolls on your turns. AI players roll
-                      automatically on their turns.
-                    </p>
-                  </div>
-                )}
-              </div>
+              <section
+                id="rules-section"
+                className="order-1 scroll-mt-4 rounded-[28px] bg-[#d1a55b]/85 px-5 py-4 text-left text-[#3a2212] shadow-lg border border-[#8b5a2b]/40 sm:scroll-mt-6 md:order-2"
+              >
+                <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-white/20 px-4 py-3">
+                  <h3 className="text-lg font-black uppercase tracking-wide">Rules</h3>
+                  <a
+                    href={HOW_TO_PLAY_ROUTE}
+                    className="inline-flex items-center rounded-full border border-[#8b5a2b]/30 bg-white/55 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-[#6b4b2a] transition hover:bg-white/70"
+                  >
+                    Board Guide
+                  </a>
+                </div>
+                <div className="space-y-1.5 text-sm">
+                  <p>
+                    1) Setup: 6 players. Each race, everyone is dealt cards from the
+                    2-12 deck (four suits).
+                  </p>
+                  <p>
+                    2) Scratch phase: Roll to scratch 4 horses. Penalties are $5,
+                    $10, $15, $20 in order. Anyone holding the scratched horse pays
+                    the penalty per card. Rolling a scratched horse again charges
+                    the roller the same penalty and adds it to the pot.
+                  </p>
+                  <p>
+                    3) Trading window: After scratches, a market opens for 35
+                    seconds. Any player can list a card for $30. Any player can buy
+                    any listed card for $30. Each player can buy up to 2 cards and
+                    sell up to 2 cards per race. Unsold cards return to their owner
+                    when trading closes.
+                  </p>
+                  <p>
+                    4) Race phase: Each roll moves the matching horse forward one
+                    peg hole. If you roll a scratched horse, you pay its penalty.
+                    The horse must hit every peg hole before moving to the winners
+                    peg.
+                  </p>
+                  <p>
+                    5) Pot and payouts: All penalties go into the pot. When a horse
+                    wins, the pot is split evenly across winning cards.
+                  </p>
+                  <p>
+                    6) Bailout and elimination: Each player can get a one-time
+                    bailout when they hit $0 or below ($100 half day, $200 full
+                    day). If they are still at $0 or below after that, they are
+                    eliminated, lose their cards, and are last in the rankings.
+                  </p>
+                  <p>
+                    7) Turns: Player 1 (you) rolls on your turns. AI players roll
+                    automatically on their turns.
+                  </p>
+                </div>
+              </section>
             </div>
           </div>
         </div>

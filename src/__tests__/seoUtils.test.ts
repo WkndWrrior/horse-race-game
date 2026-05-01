@@ -8,6 +8,18 @@ import {
 } from "../../seo-utils";
 
 describe("seo-utils", () => {
+  it("includes the how-to-play route in the default sitemap output", () => {
+    const artifacts = buildSeoArtifacts({
+      siteUrl: DEFAULT_SITE_URL,
+      lastModified: "2026-04-25",
+    });
+
+    expect(artifacts.sitemap).toContain("<loc>https://horseracegame.vercel.app/</loc>");
+    expect(artifacts.sitemap).toContain(
+      "<loc>https://horseracegame.vercel.app/how-to-play</loc>"
+    );
+  });
+
   it("builds sitemap and robots content from the requested site URL", () => {
     const artifacts = buildSeoArtifacts({
       siteUrl: "https://example.test",

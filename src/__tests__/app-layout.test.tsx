@@ -50,6 +50,159 @@ describe("App layout", () => {
     jest.useRealTimers();
     randomSpy.mockRestore();
     window.innerWidth = 1024;
+    window.history.replaceState({}, "", "/");
+  });
+
+  it("renders a dedicated how-to-play page at its own url", () => {
+    window.history.replaceState({}, "", "/how-to-play");
+
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: /how to play horse race game/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /back to game home/i })).toHaveAttribute(
+      "href",
+      "/"
+    );
+    expect(document.title).toBe("How To Play Horse Race Game | Tutorial");
+    expect(
+      screen.queryByText(/Learn the goal of the game, what happens each race/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Scratch 4 horses and avoid their penalty lines/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Roll the dice and move the matching horse/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cheer for the horses that match your cards/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows board guide and expanded homepage sections by default", () => {
+    render(<App />);
+    const appSource = fs.readFileSync(path.resolve(__dirname, "../App.tsx"), "utf8");
+    const playerStatsTeaserLink = screen.getByRole("link", { name: /^Player Stats$/i });
+    const rulesTeaserLink = screen.getByRole("link", { name: /^Rules$/i });
+
+    expect(playerStatsTeaserLink).toHaveAttribute("href", "#player-stats-section");
+    expect(rulesTeaserLink).toHaveAttribute("href", "#rules-section");
+    expect(playerStatsTeaserLink).toHaveClass("rounded-[18px]");
+    expect(rulesTeaserLink).toHaveClass("rounded-[18px]");
+    expect(screen.getAllByRole("heading", { name: /^Player Stats$/i, level: 3 })).toHaveLength(
+      1
+    );
+    expect(screen.getAllByRole("heading", { name: /^Rules$/i, level: 3 })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /board guide/i })).toHaveAttribute(
+      "href",
+      "/how-to-play"
+    );
+    expect(screen.getByText(/^Half Day$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Full Day$/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Wins: 0/i)).toHaveLength(2);
+    expect(screen.getByText(/1\) Setup: 6 players/i)).toBeInTheDocument();
+    expect(appSource).not.toContain("openHomePanel");
+  });
+
+  it("uses the tighter tutorial board layout without the old top-row peg override", () => {
+    const tutorialSource = fs.readFileSync(
+      path.resolve(__dirname, "../components/HowToPlayPage.tsx"),
+      "utf8"
+    );
+
+    expect(tutorialSource).not.toContain("badge.lane === 2");
+    expect(tutorialSource).toContain(
+      'const pegDotClassName =\n  "h-2.5 w-2.5 rounded-full bg-[#140c09] shadow-[0_1px_0_rgba(255,255,255,0.08)] sm:h-[1.22rem] sm:w-[1.22rem]"'
+    );
+    expect(tutorialSource).toContain(
+      'className="right-[1%] top-[56%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[72%] top-full"'
+    );
+    expect(tutorialSource).toContain(
+      'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
+    );
+    expect(tutorialSource).toContain(
+      'className="relative h-10 border-t border-b border-[#593413]/55 sm:h-[72px]"'
+    );
+  });
+
+  it("uses the widened scratch rail with four visible peg holes per row", () => {
+    const tutorialSource = fs.readFileSync(
+      path.resolve(__dirname, "../components/HowToPlayPage.tsx"),
+      "utf8"
+    );
+
+    expect(tutorialSource).toContain(
+      'className="left-[2%] top-[18%] sm:left-[4%] sm:top-[21%]" pinClassName="left-10 top-full"'
+    );
+    expect(tutorialSource).toContain(
+      'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
+    );
+    expect(tutorialSource).not.toContain("const hidden =");
+    expect(tutorialSource).not.toContain('hidden ? "opacity-0" : ""');
+    expect(tutorialSource).toContain(
+      'className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
+    );
+  });
+
+  it("uses the corrected lane peg counts and track alignment offset", () => {
+    const tutorialSource = fs.readFileSync(
+      path.resolve(__dirname, "../components/HowToPlayPage.tsx"),
+      "utf8"
+    );
+
+    expect(tutorialSource).toContain(
+      "const pegCount = badge.lane <= 7 ? badge.lane : 14 - badge.lane;"
+    );
+    expect(tutorialSource).toContain('className="relative pt-4 sm:pt-11"');
+  });
+
+  it("uses the updated scratched label fit classes", () => {
+    const tutorialSource = fs.readFileSync(
+      path.resolve(__dirname, "../components/HowToPlayPage.tsx"),
+      "utf8"
+    );
+
+    expect(tutorialSource).toContain(
+      'className="rounded-l-[24px] bg-[linear-gradient(90deg,#8f5314_0%,#9e621b_18%,#82440e_28%,#a1661f_41%,#7c410d_53%,#9d6320_69%,#824710_82%,#9b5f1c_100%)] px-2 py-3 sm:px-4 sm:py-4"'
+    );
+    expect(tutorialSource).toContain(
+      'className="text-[9px] font-black uppercase tracking-[0.12em] text-[#f7f1d7] sm:text-[1.5rem] sm:tracking-[0.09em] sm:leading-none"'
+    );
+  });
+
+  it("uses a shared scratch column layout for holes and dollar amounts", () => {
+    const tutorialSource = fs.readFileSync(
+      path.resolve(__dirname, "../components/HowToPlayPage.tsx"),
+      "utf8"
+    );
+
+    expect(tutorialSource).toContain(
+      'const scratchColumnGridClassName = "grid grid-cols-4 justify-items-center gap-2 sm:gap-3";'
+    );
+    expect(tutorialSource).toContain(
+      'className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
+    );
+    expect(tutorialSource).not.toContain(
+      'className="mt-4 grid grid-cols-4 gap-1 text-center text-[11px] font-black text-[#f7e6c4] sm:mt-5 sm:gap-2 sm:text-[1.1rem]"'
+    );
+  });
+
+  it("uses wider scratch columns and smaller dollar labels for readability", () => {
+    const tutorialSource = fs.readFileSync(
+      path.resolve(__dirname, "../components/HowToPlayPage.tsx"),
+      "utf8"
+    );
+
+    expect(tutorialSource).toContain(
+      'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
+    );
+    expect(tutorialSource).toContain(
+      'const scratchColumnGridClassName = "grid grid-cols-4 justify-items-center gap-2 sm:gap-3";'
+    );
+    expect(tutorialSource).toContain(
+      'className={`${scratchColumnGridClassName} pr-1 text-center text-[10px] font-black text-[#f7e6c4] sm:pr-2 sm:text-[1rem]`}'
+    );
   });
 
   it("renders the race board and player card dock in game mode", () => {

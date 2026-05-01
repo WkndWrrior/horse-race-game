@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const DEFAULT_SITE_URL = "https://horseracegame.vercel.app";
-const DEFAULT_ROUTES = ["/"];
+const DEFAULT_ROUTES = ["/", "/how-to-play"];
 
 const normalizeSiteUrl = (rawSiteUrl = DEFAULT_SITE_URL) =>
   rawSiteUrl.replace(/\/+$/, "");

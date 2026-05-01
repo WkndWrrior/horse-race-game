@@ -42,7 +42,10 @@ describe("App smoke test", () => {
 
     render(<App />);
 
-    await userEvent.click(screen.getByRole("button", { name: /player stats/i }));
+    expect(screen.getByRole("link", { name: /player stats/i })).toHaveAttribute(
+      "href",
+      "#player-stats-section"
+    );
 
     expect(screen.getByText("Wins: 5")).toBeInTheDocument();
     expect(screen.getByText("Highest Finish: $123.45")).toBeInTheDocument();
