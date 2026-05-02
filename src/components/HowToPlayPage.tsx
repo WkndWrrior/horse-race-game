@@ -94,10 +94,10 @@ const HowToPlayPage: React.FC = () => (
         aria-label="How to play tutorial board"
         className="relative overflow-hidden rounded-[40px] bg-[#ead9b8] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:p-6"
       >
-        <Callout className="left-[4%] top-[28%] sm:left-[4%] sm:top-[21%]" pinClassName="left-7 top-full">
+        <Callout className="left-[4%] top-[48%] sm:left-[4%] sm:top-[21%]" pinClassName="left-7 top-full">
           Scratch 4 horses and avoid their penalty lines
         </Callout>
-        <Callout className="right-[4%] top-[49%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[34%] top-full">
+        <Callout className="right-[4%] top-[39%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[34%] top-full">
           Roll the dice and move the matching horse
         </Callout>
         <Callout className="right-[1%] top-[72%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[72%] top-full">

@@ -133,10 +133,10 @@ describe("App layout", () => {
     );
 
     expect(tutorialSource).toContain(
-      'className="left-[4%] top-[28%] sm:left-[4%] sm:top-[21%]" pinClassName="left-7 top-full"'
+      'className="left-[4%] top-[48%] sm:left-[4%] sm:top-[21%]" pinClassName="left-7 top-full"'
     );
     expect(tutorialSource).toContain(
-      'className="right-[4%] top-[49%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[34%] top-full"'
+      'className="right-[4%] top-[39%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[34%] top-full"'
     );
     expect(tutorialSource).toContain(
       'className="grid grid-cols-[96px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
