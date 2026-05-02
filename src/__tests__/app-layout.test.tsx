@@ -116,13 +116,13 @@ describe("App layout", () => {
       'const pegDotClassName =\n  "h-2.5 w-2.5 rounded-full bg-[#140c09] shadow-[0_1px_0_rgba(255,255,255,0.08)] sm:h-[1.22rem] sm:w-[1.22rem]"'
     );
     expect(tutorialSource).toContain(
-      'className="right-[2%] top-[60%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[66%] top-full"'
+      'className="right-[1%] top-[72%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[72%] top-full"'
     );
     expect(tutorialSource).toContain(
-      'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
+      'className="grid grid-cols-[96px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
     );
     expect(tutorialSource).toContain(
-      'className="relative h-10 border-t border-b border-[#593413]/55 sm:h-[72px]"'
+      'className="relative h-9 border-t border-b border-[#593413]/55 sm:h-[72px]"'
     );
   });
 
@@ -133,18 +133,18 @@ describe("App layout", () => {
     );
 
     expect(tutorialSource).toContain(
-      'className="left-[3%] top-[20%] sm:left-[4%] sm:top-[21%]" pinClassName="left-8 top-full"'
+      'className="left-[4%] top-[28%] sm:left-[4%] sm:top-[21%]" pinClassName="left-7 top-full"'
     );
     expect(tutorialSource).toContain(
-      'className="right-[2%] top-[7%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[26%] top-full"'
+      'className="right-[4%] top-[49%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[34%] top-full"'
     );
     expect(tutorialSource).toContain(
-      'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
+      'className="grid grid-cols-[96px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
     );
     expect(tutorialSource).not.toContain("const hidden =");
     expect(tutorialSource).not.toContain('hidden ? "opacity-0" : ""');
     expect(tutorialSource).toContain(
-      'className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
+      'className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5 sm:mt-5 sm:gap-3"'
     );
   });
 
@@ -184,7 +184,7 @@ describe("App layout", () => {
       'const scratchColumnGridClassName = "grid grid-cols-4 justify-items-center gap-2 sm:gap-3";'
     );
     expect(tutorialSource).toContain(
-      'className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3"'
+      'className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5 sm:mt-5 sm:gap-3"'
     );
     expect(tutorialSource).not.toContain(
       'className="mt-4 grid grid-cols-4 gap-1 text-center text-[11px] font-black text-[#f7e6c4] sm:mt-5 sm:gap-2 sm:text-[1.1rem]"'
@@ -198,13 +198,33 @@ describe("App layout", () => {
     );
 
     expect(tutorialSource).toContain(
-      'className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
+      'className="grid grid-cols-[96px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]"'
     );
     expect(tutorialSource).toContain(
       'const scratchColumnGridClassName = "grid grid-cols-4 justify-items-center gap-2 sm:gap-3";'
     );
     expect(tutorialSource).toContain(
       'className={`${scratchColumnGridClassName} pr-1 text-center text-[10px] font-black text-[#f7e6c4] sm:pr-2 sm:text-[1rem]`}'
+    );
+  });
+
+  it("uses mobile-specific callout anchors and tighter mobile preview spacing", () => {
+    const tutorialSource = fs.readFileSync(
+      path.resolve(__dirname, "../components/HowToPlayPage.tsx"),
+      "utf8"
+    );
+
+    expect(tutorialSource).toContain(
+      'className="relative overflow-hidden rounded-[40px] bg-[#ead9b8] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:p-6"'
+    );
+    expect(tutorialSource).toContain(
+      'className="grid gap-2.5 lg:grid-cols-[minmax(0,1.22fr)_minmax(320px,0.78fr)] sm:gap-4"'
+    );
+    expect(tutorialSource).toContain(
+      'className="mt-4 rounded-[30px] bg-[#e6d7b7] p-2.5 sm:mt-6 sm:rounded-[40px] sm:p-6"'
+    );
+    expect(tutorialSource).toContain(
+      'className="rounded-[24px] bg-[linear-gradient(90deg,#8d4f10_0%,#9a5b14_8%,#7d430d_14%,#99611d_22%,#80450f_29%,#8e5515_38%,#7a410e_46%,#93571a_54%,#7e4711_62%,#925717_70%,#7d450f_78%,#9a601b_86%,#7f450f_93%,#8a5015_100%)] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_18px_32px_rgba(114,68,13,0.18)] sm:rounded-[34px] sm:p-6"'
     );
   });
 

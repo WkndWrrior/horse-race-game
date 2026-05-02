@@ -59,11 +59,11 @@ const Callout: React.FC<{
   pinClassName: string;
   children: React.ReactNode;
 }> = ({ className, pinClassName, children }) => (
-  <div className={`absolute z-20 max-w-[13rem] sm:max-w-[16rem] ${className}`}>
-    <div className="rounded-2xl border border-[#1e6e49]/15 bg-[#1f6f4a] px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide text-[#f6e5c8] shadow-[0_14px_28px_rgba(31,111,74,0.28)] sm:px-4 sm:py-3 sm:text-xs">
+  <div className={`absolute z-20 max-w-[11rem] sm:max-w-[16rem] ${className}`}>
+    <div className="rounded-2xl border border-[#1e6e49]/15 bg-[#1f6f4a] px-2.5 py-2 text-[10px] font-bold uppercase tracking-wide text-[#f6e5c8] shadow-[0_14px_28px_rgba(31,111,74,0.28)] sm:px-4 sm:py-3 sm:text-xs">
       {children}
     </div>
-    <span className={`absolute block h-10 w-0.5 bg-[#1f6f4a]/75 sm:h-14 ${pinClassName}`} />
+    <span className={`absolute block h-8 w-0.5 bg-[#1f6f4a]/75 sm:h-14 ${pinClassName}`} />
     <span
       className={`absolute block h-2.5 w-2.5 rounded-full bg-[#1f6f4a] ring-4 ring-[#f3e4c4] sm:h-3 sm:w-3 ${pinClassName}`}
       style={{ transform: "translate(-50%, calc(100% + 0.125rem))" }}
@@ -92,38 +92,38 @@ const HowToPlayPage: React.FC = () => (
 
       <section
         aria-label="How to play tutorial board"
-        className="relative overflow-hidden rounded-[40px] bg-[#ead9b8] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:p-6"
+        className="relative overflow-hidden rounded-[40px] bg-[#ead9b8] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:p-6"
       >
-        <Callout className="left-[3%] top-[20%] sm:left-[4%] sm:top-[21%]" pinClassName="left-8 top-full">
+        <Callout className="left-[4%] top-[28%] sm:left-[4%] sm:top-[21%]" pinClassName="left-7 top-full">
           Scratch 4 horses and avoid their penalty lines
         </Callout>
-        <Callout className="right-[2%] top-[7%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[26%] top-full">
+        <Callout className="right-[4%] top-[49%] sm:right-[8%] sm:top-[6%]" pinClassName="left-[34%] top-full">
           Roll the dice and move the matching horse
         </Callout>
-        <Callout className="right-[2%] top-[60%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[66%] top-full">
+        <Callout className="right-[1%] top-[72%] sm:right-[2.5%] sm:top-[55%]" pinClassName="left-[72%] top-full">
           Cheer for the horses that match your cards
         </Callout>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.22fr)_minmax(320px,0.78fr)] sm:gap-4">
-          <div className="grid gap-3 sm:gap-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[22px] border border-[#86a77d] bg-[#4e7b4f] px-4 py-3 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)] sm:rounded-[26px] sm:px-6 sm:py-4">
+        <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1.22fr)_minmax(320px,0.78fr)] sm:gap-4">
+          <div className="grid gap-2.5 sm:gap-4">
+            <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4">
+              <div className="rounded-[22px] border border-[#86a77d] bg-[#4e7b4f] px-3.5 py-2.5 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)] sm:rounded-[26px] sm:px-6 sm:py-4">
                 <p className="text-sm font-black uppercase tracking-[0.14em]">Current Player</p>
-                <p className="mt-4 text-2xl font-black sm:text-3xl">You</p>
+                <p className="mt-3 text-2xl font-black sm:mt-4 sm:text-3xl">You</p>
               </div>
-              <div className="rounded-[22px] border border-[#86a77d] bg-[#4e7b4f] px-4 py-3 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)] sm:rounded-[26px] sm:px-6 sm:py-4">
+              <div className="rounded-[22px] border border-[#86a77d] bg-[#4e7b4f] px-3.5 py-2.5 text-[#f7f1d7] shadow-[0_14px_30px_rgba(51,98,57,0.25)] sm:rounded-[26px] sm:px-6 sm:py-4">
                 <p className="text-sm font-black uppercase tracking-[0.14em]">Pot</p>
-                <p className="mt-4 text-2xl font-black sm:text-3xl">$225.00</p>
+                <p className="mt-3 text-2xl font-black sm:mt-4 sm:text-3xl">$225.00</p>
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-[#86a77d] bg-[#7d986e] px-4 py-3 text-[#f7f1d7] shadow-[0_14px_30px_rgba(64,94,58,0.2)] sm:rounded-[26px] sm:px-6 sm:py-4">
+            <div className="rounded-[22px] border border-[#86a77d] bg-[#7d986e] px-3.5 py-2.5 text-[#f7f1d7] shadow-[0_14px_30px_rgba(64,94,58,0.2)] sm:rounded-[26px] sm:px-6 sm:py-4">
               <p className="text-sm font-black uppercase tracking-[0.14em]">Scratched Horses</p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-3 flex flex-wrap gap-2 sm:mt-4 sm:gap-3">
                 {scratchChips.map((chip) => (
                   <div
                     key={`${chip.horse}-${chip.penalty}`}
-                    className={`rounded-full px-4 py-2 text-sm font-black text-white shadow ${chip.className}`}
+                    className={`rounded-full px-3 py-1.5 text-xs font-black text-white shadow sm:px-4 sm:py-2 sm:text-sm ${chip.className}`}
                   >
                     #{chip.horse} — {chip.penalty}
                   </div>
@@ -132,20 +132,20 @@ const HowToPlayPage: React.FC = () => (
             </div>
           </div>
 
-          <aside className="rounded-[24px] border border-[#86a77d] bg-[#4e7b4f] px-4 py-3 text-[#f7f1d7] shadow-[0_18px_34px_rgba(51,98,57,0.24)] sm:rounded-[30px] sm:px-6 sm:py-4">
+          <aside className="rounded-[24px] border border-[#86a77d] bg-[#4e7b4f] px-3.5 py-2.5 text-[#f7f1d7] shadow-[0_18px_34px_rgba(51,98,57,0.24)] sm:rounded-[30px] sm:px-6 sm:py-4">
             <p className="text-sm uppercase tracking-[0.4em] text-[#d9e3ca]">Roll Total</p>
-            <p className="mt-4 text-2xl font-black sm:text-3xl">5</p>
-            <div className="mt-5 flex justify-center gap-4 sm:mt-8 sm:gap-6">
+            <p className="mt-3 text-2xl font-black sm:mt-4 sm:text-3xl">5</p>
+            <div className="mt-4 flex justify-center gap-3 sm:mt-8 sm:gap-6">
               <DiceFace value={3} />
               <DiceFace value={2} />
             </div>
-            <p className="mt-5 text-base text-[#d6ddcb] sm:mt-8 sm:text-lg">Click to roll the dice</p>
+            <p className="mt-4 text-sm text-[#d6ddcb] sm:mt-8 sm:text-lg">Click to roll the dice</p>
           </aside>
         </div>
 
-        <div className="mt-5 rounded-[34px] bg-[#e6d7b7] p-3 sm:mt-6 sm:rounded-[40px] sm:p-6">
-          <div className="rounded-[28px] bg-[linear-gradient(90deg,#8d4f10_0%,#9a5b14_8%,#7d430d_14%,#99611d_22%,#80450f_29%,#8e5515_38%,#7a410e_46%,#93571a_54%,#7e4711_62%,#925717_70%,#7d450f_78%,#9a601b_86%,#7f450f_93%,#8a5015_100%)] p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_18px_32px_rgba(114,68,13,0.18)] sm:rounded-[34px] sm:p-6">
-            <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]">
+        <div className="mt-4 rounded-[30px] bg-[#e6d7b7] p-2.5 sm:mt-6 sm:rounded-[40px] sm:p-6">
+          <div className="rounded-[24px] bg-[linear-gradient(90deg,#8d4f10_0%,#9a5b14_8%,#7d430d_14%,#99611d_22%,#80450f_29%,#8e5515_38%,#7a410e_46%,#93571a_54%,#7e4711_62%,#925717_70%,#7d450f_78%,#9a601b_86%,#7f450f_93%,#8a5015_100%)] p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05),0_18px_32px_rgba(114,68,13,0.18)] sm:rounded-[34px] sm:p-6">
+            <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-0 sm:grid-cols-[210px_minmax(0,1fr)]">
               <div className="rounded-l-[24px] bg-[linear-gradient(90deg,#8f5314_0%,#9e621b_18%,#82440e_28%,#a1661f_41%,#7c410d_53%,#9d6320_69%,#824710_82%,#9b5f1c_100%)] px-2 py-3 sm:px-4 sm:py-4">
                 <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#f7f1d7] sm:text-[1.5rem] sm:tracking-[0.09em] sm:leading-none">
                   Scratched
@@ -154,7 +154,7 @@ const HowToPlayPage: React.FC = () => (
                   {laneBadges.map((badge) => (
                     <div
                       key={badge.lane}
-                      className="grid h-10 grid-cols-[1fr_auto] items-center gap-2 sm:h-[72px] sm:gap-3"
+                      className="grid h-9 grid-cols-[1fr_auto] items-center gap-2 sm:h-[72px] sm:gap-3"
                     >
                       <div className={`${scratchColumnGridClassName} w-full min-w-0 pr-1 sm:pr-2`}>
                         {[0, 1, 2, 3].map((pegIndex) => (
@@ -172,7 +172,7 @@ const HowToPlayPage: React.FC = () => (
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:mt-5 sm:gap-3">
+                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5 sm:mt-5 sm:gap-3">
                       <div
                         className={`${scratchColumnGridClassName} pr-1 text-center text-[10px] font-black text-[#f7e6c4] sm:pr-2 sm:text-[1rem]`}
                       >
@@ -197,7 +197,7 @@ const HowToPlayPage: React.FC = () => (
                         return (
                           <div
                             key={`track-${badge.lane}`}
-                            className="relative h-10 border-t border-b border-[#593413]/55 sm:h-[72px]"
+                            className="relative h-9 border-t border-b border-[#593413]/55 sm:h-[72px]"
                           >
                             <div
                               className="absolute inset-y-0 left-0 w-1 bg-[#2d1407] sm:w-[5px]"
