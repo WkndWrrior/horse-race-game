@@ -37,7 +37,7 @@ Example placeholder: `docs/screenshots/home.png`
 
 ### Requirements
 
-- Node.js 20+ recommended
+- Node.js 24 required
 
 ### Install
 
