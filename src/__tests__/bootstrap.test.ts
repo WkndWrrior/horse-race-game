@@ -1,5 +1,8 @@
 export {};
 
+import fs from "fs";
+import path from "path";
+
 describe("bootstrap and metrics hooks", () => {
   afterEach(() => {
     jest.resetModules();
@@ -18,6 +21,9 @@ describe("bootstrap and metrics hooks", () => {
     jest.doMock("../reportWebVitals", () => ({
       __esModule: true,
       default: jest.fn(),
+    }));
+    jest.doMock("@vercel/speed-insights/react", () => ({
+      SpeedInsights: () => null,
     }));
 
     expect(() => {
@@ -39,5 +45,14 @@ describe("bootstrap and metrics hooks", () => {
 
     await expect(reportWebVitals(onPerfEntry)).resolves.toBeUndefined();
     expect(onPerfEntry).not.toHaveBeenCalled();
+  });
+
+  it("renders the Vercel React Speed Insights component at the app root", () => {
+    const bootstrapSource = fs.readFileSync(path.resolve(__dirname, "../index.tsx"), "utf8");
+
+    expect(bootstrapSource).toContain(
+      'import { SpeedInsights } from "@vercel/speed-insights/react";'
+    );
+    expect(bootstrapSource).toContain("<SpeedInsights />");
   });
 });
